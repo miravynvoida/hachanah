@@ -314,6 +314,15 @@ def main_keyboard(employee: dict) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(rows)
 
 
+
+async def edit_or_send(message, text: str, **kwargs):
+    """Keep one interactive Telegram message whenever Telegram allows editing it."""
+    try:
+        await message.edit_text(text, **kwargs)
+    except Exception:
+        try: await message.reply_text(text, **kwargs)
+        except Exception: log.exception("Could not render Telegram screen")
+
 async def notify_approved_staff(text: str, exclude: set[int] | None = None) -> None:
     if not bot_app: return
     exclude = exclude or set()
@@ -343,7 +352,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 except Exception: log.exception("Could not notify admin about reapplication")
         await update.effective_message.reply_text(f"Заявка на доступ {'отправлена повторно' if was_rejected else 'уже ожидает подтверждения'}.\nИмя: {employee_label(employee)}\nTelegram ID: {u.id}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить статус", callback_data="registration:status")]]))
         return
-    await update.effective_message.reply_text(f"Привет, {employee_label(employee)}!\n\n🍽 Помощник команды ресторана\nИщи блюда и напитки, проверяй стоп-лист и управляй сменой.\n\nВыбери действие:", reply_markup=main_keyboard(employee))
+    await update.effective_message.reply_text(f"🍽 <b>Помощник команды ресторана</b>\nПривет, {html_escape(employee_label(employee))}!\n\nВыбери действие:", parse_mode="HTML", reply_markup=main_keyboard(employee))
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -375,8 +384,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not employee or employee.get("status") != "approved":
         await update.effective_message.reply_text("Сначала отправь /start и дождись подтверждения доступа."); return
     if context.user_data.pop("awaiting_menu_search", False):
+        prompt_id = context.user_data.pop("search_prompt_id", None)
         try: await update.effective_message.delete()
         except Exception: pass
+        if prompt_id:
+            try:
+                with db_connect() as con: rows = con.execute("SELECT id,name,category,section,stock_status,price FROM menu_items WHERE is_active=1 AND (name LIKE ? OR category LIKE ? OR composition LIKE ? OR description LIKE ? OR extra_info LIKE ?) ORDER BY CASE WHEN lower(name)=lower(?) THEN 0 WHEN lower(name) LIKE lower(?) THEN 1 ELSE 2 END, name LIMIT 40", (f"%{text}%",)*5 + (text, f"{text}%")).fetchall()
+                if not rows:
+                    await context.bot.edit_message_text(chat_id=uid, message_id=prompt_id, text=f"По запросу «{text}» ничего не найдено.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔎 Новый поиск", callback_data="menu:search")],[InlineKeyboardButton("🏠 Главное меню", callback_data="menu:home")]])); return
+                kb=[[InlineKeyboardButton(("🔴 " if r["stock_status"]=="stop" else "🟢 ")+r["name"][:48]+(f" · {int(r['price'])} ₽" if r["price"] is not None else ""), callback_data=f"item:view:{r['id']}")] for r in rows]
+                kb += [[InlineKeyboardButton("◀️ Предыдущая",callback_data="search:page:0"),InlineKeyboardButton("Следующая ▶️",callback_data="search:page:1")],[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]] if len(rows)>=40 else [[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]]
+                await context.bot.edit_message_text(chat_id=uid, message_id=prompt_id, text=f"🔎 Результаты поиска «{text}» — выбери позицию:", reply_markup=InlineKeyboardMarkup(kb))
+                context.user_data["last_search_query"] = text
+                return
+            except Exception: log.exception("Could not replace search prompt with results")
     await search_menu_in_chat(update, context, text)
 
 
@@ -398,53 +419,73 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
     uid = q.from_user.id
     employee = get_employee(uid)
     action = q.data or ""
+    if action == "noop": return
     if action == "registration:status":
-        if employee and employee.get("status") == "approved": await q.message.reply_text("Доступ подтверждён. Нажми /start.", reply_markup=main_keyboard(employee))
-        else: await q.message.reply_text("Заявка пока ожидает подтверждения.")
+        if employee and employee.get("status") == "approved": await edit_or_send(q.message, "Доступ подтверждён. Нажми /start.", reply_markup=main_keyboard(employee))
+        else: await edit_or_send(q.message, "Заявка пока ожидает подтверждения.")
         return
     if not employee or employee.get("status") != "approved":
-        await q.message.reply_text("Доступ ещё не одобрен. Нажми /start и отправь ФИО или имя."); return
+        await edit_or_send(q.message, "Доступ ещё не одобрен. Нажми /start и отправь ФИО или имя."); return
     if action == "menu:search":
-        await q.message.reply_text("Напиши название блюда, напитка или часть названия — предложу похожие позиции.")
-    elif action == "menu:stops":
-        with db_connect() as con: rows=con.execute("SELECT id,name,category,stop_reason,price FROM menu_items WHERE is_active=1 AND stock_status='stop' ORDER BY section,category,name").fetchall()
-        if not rows: await q.message.reply_text("✅ Стоп-лист пуст — все позиции доступны.", reply_markup=main_keyboard(employee)); return
-        kb=[[InlineKeyboardButton("🔴 "+r['name'][:55],callback_data=f"item:view:{r['id']}")] for r in rows]
+        context.user_data["awaiting_menu_search"] = True
+        context.user_data["search_prompt_id"] = q.message.message_id
+        await edit_or_send(q.message, "🔎 <b>Найти блюдо или напиток</b>\nНапиши название или часть названия следующим сообщением — я заменю этот экран результатами поиска.", parse_mode="HTML", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Главное меню", callback_data="menu:home")]]))
+    elif action.startswith("search:page:"):
+        query=context.user_data.get("last_search_query", "мохито")
+        page=int(action.rsplit(':',1)[1])
+        with db_connect() as con:
+            rows=con.execute("SELECT id,name,category,section,stock_status,price FROM menu_items WHERE is_active=1 AND (name LIKE ? OR category LIKE ? OR composition LIKE ? OR description LIKE ? OR extra_info LIKE ?) ORDER BY CASE WHEN lower(name)=lower(?) THEN 0 WHEN lower(name) LIKE lower(?) THEN 1 ELSE 2 END, name LIMIT 40",(f"%{query}%",)*5+(query,f"{query}%")).fetchall()
+        size=12; page=max(0,min(page,max(0,(len(rows)-1)//size)))
+        kb=[[InlineKeyboardButton(("🔴 " if r['stock_status']=='stop' else "🟢 ")+r['name'][:48]+(f" · {int(r['price'])} ₽" if r['price'] is not None else ''),callback_data=f"item:view:{r['id']}")] for r in rows[page*size:(page+1)*size]]
+        nav=[]
+        if page>0: nav.append(InlineKeyboardButton("◀️ Назад",callback_data=f"search:page:{page-1}"))
+        if (page+1)*size<len(rows): nav.append(InlineKeyboardButton("Следующая ▶️",callback_data=f"search:page:{page+1}"))
+        if nav: kb.append(nav)
         kb.append([InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")])
-        try: await q.edit_message_text("🚫 <b>Стоп-лист</b>\nВыбери позицию, чтобы посмотреть детали или вернуть её.",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
-        except Exception: await q.message.reply_text("🚫 <b>Стоп-лист</b>\nВыбери позицию, чтобы посмотреть детали или вернуть её.",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
+        await edit_or_send(q.message,f"🔎 Поиск «{html_escape(query)}» · страница {page+1}",reply_markup=InlineKeyboardMarkup(kb))
+    elif action == "menu:stops" or action.startswith("stops:page:"):
+        page=int(action.rsplit(':',1)[1]) if action.startswith('stops:page:') else 0
+        with db_connect() as con: rows=con.execute("SELECT id,name,category,stop_reason,price FROM menu_items WHERE is_active=1 AND stock_status='stop' ORDER BY section,category,name").fetchall()
+        if not rows: await edit_or_send(q.message, "✅ Стоп-лист пуст — все позиции доступны.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]])); return
+        size=12; page=max(0,min(page,(len(rows)-1)//size)); kb=[[InlineKeyboardButton("🔴 "+r['name'][:50],callback_data=f"item:view:{r['id']}")] for r in rows[page*size:(page+1)*size]]
+        nav=[]
+        if page>0: nav.append(InlineKeyboardButton("◀️ Назад",callback_data=f"stops:page:{page-1}"))
+        if (page+1)*size<len(rows): nav.append(InlineKeyboardButton("Далее ▶️",callback_data=f"stops:page:{page+1}"))
+        if nav: kb.append(nav)
+        kb.append([InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")])
+        await edit_or_send(q.message, f"🚫 <b>Стоп-лист</b> · {len(rows)} позиций · страница {page+1}\nВыбери позицию:",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
     elif action == "menu:profile":
         sh=get_active_shift(uid)
-        await q.message.reply_text(f"👤 <b>{employee_label(employee)}</b>\nРоль: {role_label(employee['role'])}\nСтатус: {employee['status']}\nСмена: {'активна с '+sh['started_at'] if sh else 'не начата'}\nTelegram ID: {uid}",parse_mode="HTML",reply_markup=main_keyboard(employee))
+        await edit_or_send(q.message, f"👤 <b>{employee_label(employee)}</b>\nРоль: {role_label(employee['role'])}\nСтатус: {employee['status']}\nСмена: {'активна с '+sh['started_at'] if sh else 'не начата'}\nTelegram ID: {uid}",parse_mode="HTML",reply_markup=main_keyboard(employee))
     elif action in ("shift:start","shift:finish"):
         if action == "shift:start":
             if not get_active_shift(uid):
                 with db_connect() as con: con.execute("INSERT INTO shifts(employee_id,started_at,status) VALUES (?,?, 'active')",(uid,now_iso())); con.commit()
                 await notify_approved_staff(f"🟢 Смена началась\n{employee_label(employee)} вышел(ла) на смену.", exclude={uid})
-            await q.message.reply_text("Смена активна.",reply_markup=main_keyboard(employee))
+            await edit_or_send(q.message, "Смена активна.",reply_markup=main_keyboard(employee))
         else:
             sh=get_active_shift(uid)
             if sh:
                 with db_connect() as con: con.execute("UPDATE shifts SET status='closed',ended_at=? WHERE id=?",(now_iso(),sh['id'])); con.commit()
                 await notify_approved_staff(f"🔴 Смена завершена\n{employee_label(employee)} завершил(а) смену.",exclude={uid})
-            await q.message.reply_text("Смена завершена.",reply_markup=main_keyboard(employee))
+            await edit_or_send(q.message, "Смена завершена.",reply_markup=main_keyboard(employee))
     elif action.startswith("item:view:"):
         item_id=action.split(":",2)[2]
         with db_connect() as con: item=con.execute("SELECT * FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
-        if not item: await q.message.reply_text("Позиция не найдена."); return
+        if not item: await edit_or_send(q.message, "Позиция не найдена."); return
         text=f"<b>{html_escape(item['name'])}</b>\n{html_escape(item['section'])} · {html_escape(item['category'])}\nСтатус: {'🔴 В стоп-листе' if item['stock_status']=='stop' else '🟢 Доступно'}\nЦена: {str(int(item['price']))+' ₽' if item['price'] is not None else 'не указана'}"
         for title,col in [("Описание","description"),("Состав","composition"),("Аллергены / дополнительная информация","extra_info"),("Особенности подачи","wow"),("Как рассказать гостю","speech")]:
             if item[col]: text+=f"\n\n<b>{title}</b>\n{html_escape(item[col])}"
         if item['stock_status']=='stop': buttons=[[InlineKeyboardButton("✅ Вернуть в меню",callback_data=f"item:restore:{item_id}")]]
         else: buttons=[[InlineKeyboardButton("🚫 В стоп-лист",callback_data=f"item:stop:{item_id}")]]
         buttons.append([InlineKeyboardButton("↩️ Главное меню",callback_data="menu:home")])
-        await q.message.reply_text(text[:4000],parse_mode="HTML",reply_markup=InlineKeyboardMarkup(buttons))
+        await edit_or_send(q.message, text[:4000],parse_mode="HTML",reply_markup=InlineKeyboardMarkup(buttons))
     elif action.startswith("item:stop:") or action.startswith("item:restore:"):
-        if not get_active_shift(uid): await q.message.reply_text("Сначала начни смену — только активный сотрудник может менять стоп-лист."); return
+        if not get_active_shift(uid): await edit_or_send(q.message, "Сначала начни смену — только активный сотрудник может менять стоп-лист."); return
         verb,item_id=action.split(":",2)[1:]
         with db_connect() as con:
             item=con.execute("SELECT id,name,stock_status FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
-            if not item: await q.message.reply_text("Позиция не найдена."); return
+            if not item: await edit_or_send(q.message, "Позиция не найдена."); return
             if verb=='stop' and item['stock_status']!='stop':
                 con.execute("UPDATE menu_items SET stock_status='stop',stop_reason='Добавлено из чата бота',updated_at=?,updated_by=? WHERE id=?",(now_iso(),uid,item_id)); con.execute("INSERT INTO audit_log(item_id,item_name,action,reason,employee_id,created_at) VALUES (?,?,?,?,?,?)",(item_id,item['name'],'stop','Добавлено из чата бота',uid,now_iso())); changed=True
             elif verb=='restore' and item['stock_status']=='stop':
@@ -452,27 +493,35 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             else: changed=False
             con.commit()
         if changed: await notify_approved_staff(("🚫 Добавлено в стоп-лист" if verb=='stop' else "✅ Возвращено в меню")+f"\nПозиция: {item['name']}\nСотрудник: {employee_label(employee)}",exclude={uid})
-        await q.message.reply_text(("Позиция добавлена в стоп-лист." if verb=='stop' else "Позиция возвращена в меню."),reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Открыть позицию",callback_data=f"item:view:{item_id}")],[InlineKeyboardButton("Главное меню",callback_data="menu:home")]]))
+        await edit_or_send(q.message, ("Позиция добавлена в стоп-лист." if verb=='stop' else "Позиция возвращена в меню."),reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Открыть позицию",callback_data=f"item:view:{item_id}")],[InlineKeyboardButton("Главное меню",callback_data="menu:home")]]))
     elif action == "menu:home":
         try: await q.edit_message_text(f"🍽 <b>Помощник команды ресторана</b>\nПривет, {employee_label(employee)}!\nВыбери действие:",parse_mode="HTML",reply_markup=main_keyboard(employee))
-        except Exception: await q.message.reply_text(f"🍽 Помощник команды ресторана\nПривет, {employee_label(employee)}!",reply_markup=main_keyboard(employee))
+        except Exception: await edit_or_send(q.message, f"🍽 Помощник команды ресторана\nПривет, {employee_label(employee)}!",reply_markup=main_keyboard(employee))
     elif action == "admin:home":
-        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
-        await q.message.reply_text("🛠 <b>Управление сотрудниками</b>",parse_mode="HTML",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⏳ Заявки",callback_data="admin:pending"),InlineKeyboardButton("👥 Сотрудники",callback_data="admin:employees")],[InlineKeyboardButton("🕘 Все смены",callback_data="admin:shifts")],[InlineKeyboardButton("⬅️ Главное меню",callback_data="menu:home")]]))
-    elif action == "admin:pending" or action == "admin:employees":
-        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
-        status='pending' if action.endswith('pending') else 'approved'
+        if employee['role'] not in ('admin','manager'): await edit_or_send(q.message, "Недостаточно прав."); return
+        await edit_or_send(q.message, "🛠 <b>Управление сотрудниками</b>",parse_mode="HTML",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⏳ Заявки",callback_data="admin:pending"),InlineKeyboardButton("👥 Сотрудники",callback_data="admin:employees")],[InlineKeyboardButton("🕘 Все смены",callback_data="admin:shifts")],[InlineKeyboardButton("⬅️ Главное меню",callback_data="menu:home")]]))
+    elif action == "admin:pending" or action == "admin:employees" or action.startswith("admin:employees:page:") or action.startswith("admin:pending:page:"):
+        if employee['role'] not in ('admin','manager'): await edit_or_send(q.message, "Недостаточно прав."); return
+        status='pending' if action.startswith('admin:pending') or action.startswith('admin:pending:page:') else ('pending' if action.startswith('admin:pending') else 'approved')
+        if action.startswith('admin:approved:page:'): status='approved'
+        page=int(action.rsplit(':',1)[1]) if ':page:' in action else 0
         with db_connect() as con: rows=con.execute("SELECT * FROM employees WHERE status=? ORDER BY display_name,first_name",(status,)).fetchall()
+        page_size=12; page=max(0,min(page,(max(0,len(rows)-1)//page_size)))
         kb=[]
-        for r in rows[:80]:
+        for r in rows[page*page_size:(page+1)*page_size]:
             label=f"⏳ {employee_label(r)}" if status=='pending' else f"{employee_label(r)} · {role_label(r['role'])}"
             kb.append([InlineKeyboardButton(label[:60],callback_data=f"staff:open:{r['telegram_id']}:{status}")])
+        nav=[]
+        if page>0: nav.append(InlineKeyboardButton("◀️ Назад",callback_data=f"admin:{status}:page:{page-1}"))
+        nav.append(InlineKeyboardButton(f"{page+1}/{max(1,(len(rows)+page_size-1)//page_size)}",callback_data="noop"))
+        if (page+1)*page_size<len(rows): nav.append(InlineKeyboardButton("Вперёд ▶️",callback_data=f"admin:{status}:page:{page+1}"))
+        if nav: kb.append(nav)
         kb.extend([[InlineKeyboardButton("⏳ Заявки",callback_data="admin:pending"),InlineKeyboardButton("👥 Сотрудники",callback_data="admin:employees")],[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]])
-        txt=("⏳ Заявки на доступ" if status=='pending' else "👥 Сотрудники")+f"\nВсего: {len(rows)}\nВыбери человека:"
+        txt=("⏳ Заявки на доступ" if status=='pending' else "👥 Сотрудники")+f"\nВсего: {len(rows)} · страница {page+1}\nВыбери человека:"
         try: await q.edit_message_text(txt,reply_markup=InlineKeyboardMarkup(kb))
-        except Exception: await q.message.reply_text(txt,reply_markup=InlineKeyboardMarkup(kb))
+        except Exception: await edit_or_send(q.message, txt,reply_markup=InlineKeyboardMarkup(kb))
     elif action.startswith("staff:open:"):
-        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        if employee['role'] not in ('admin','manager'): await edit_or_send(q.message, "Недостаточно прав."); return
         _,_,target,status=action.split(":"); target=int(target)
         with db_connect() as con: r=con.execute("SELECT * FROM employees WHERE telegram_id=?",(target,)).fetchone()
         if not r: await q.answer("Сотрудник не найден",show_alert=True); return
@@ -482,24 +531,40 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             kb=[[InlineKeyboardButton("Официант",callback_data=f"staff:role:{target}:waiter"),InlineKeyboardButton("Стажёр",callback_data=f"staff:role:{target}:trainee")],[InlineKeyboardButton("Управляющий",callback_data=f"staff:role:{target}:manager"),InlineKeyboardButton("Администратор",callback_data=f"staff:role:{target}:admin")],[InlineKeyboardButton("🚫 Отключить доступ",callback_data=f"staff:reject:{target}")]]
         kb.append([InlineKeyboardButton("⬅️ К списку",callback_data="admin:employees" if status=='approved' else "admin:pending"),InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")])
         try: await q.edit_message_text(f"👤 {employee_label(r)}\nРоль: {role_label(r['role'])}\nСтатус: {r['status']}\nID: {target}\n@{r['username'] or 'нет username'}",reply_markup=InlineKeyboardMarkup(kb))
-        except Exception: await q.message.reply_text(f"👤 {employee_label(r)} · {role_label(r['role'])}",reply_markup=InlineKeyboardMarkup(kb))
-    elif action == "admin:shifts":
-        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
-        with db_connect() as con: rows=con.execute("SELECT s.*,e.display_name,e.first_name,e.last_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id ORDER BY s.id DESC LIMIT 30").fetchall()
-        lines=["🕘 <b>Смены команды</b>"]
-        for r in rows: lines.append(f"• {employee_label(r)} — {'активна' if r['status']=='active' else 'закрыта'}\n  {r['started_at']}"+(f" — {r['ended_at']}" if r['ended_at'] else ''))
-        await q.message.reply_text("\n".join(lines)[:4000],parse_mode="HTML",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад",callback_data="admin:home")]]))
+        except Exception: await edit_or_send(q.message, f"👤 {employee_label(r)} · {role_label(r['role'])}",reply_markup=InlineKeyboardMarkup(kb))
+    elif action == "admin:shifts" or action.startswith("admin:shifts:staff:") or action.startswith("admin:shifts:page:"):
+        if employee['role'] not in ('admin','manager'): await edit_or_send(q.message, "Недостаточно прав."); return
+        staff_filter=None; page=0
+        if action.startswith("admin:shifts:staff:"):
+            staff_filter=int(action.rsplit(':',1)[1])
+        elif action.startswith("admin:shifts:page:"):
+            bits=action.split(':'); page=int(bits[-1]); staff_filter=int(bits[-2]) if bits[-2].isdigit() and len(bits)>4 else None
+        with db_connect() as con:
+            staff=con.execute("SELECT telegram_id,display_name,first_name,last_name FROM employees WHERE status='approved' ORDER BY display_name,first_name").fetchall()
+            if staff_filter is None: rows=con.execute("SELECT s.*,e.display_name,e.first_name,e.last_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id ORDER BY s.id DESC").fetchall()
+            else: rows=con.execute("SELECT s.*,e.display_name,e.first_name,e.last_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id WHERE s.employee_id=? ORDER BY s.id DESC",(staff_filter,)).fetchall()
+        page_size=8; total=len(rows); page=max(0,min(page,(max(0,total-1)//page_size)))
+        lines=["🕘 <b>История смен</b>","Фильтр: "+(next((employee_label(x) for x in staff if int(x['telegram_id'])==staff_filter),"Сотрудник") if staff_filter else "Все сотрудники")]
+        for r in rows[page*page_size:(page+1)*page_size]: lines.append(f"• {html_escape(employee_label(r))} — {'🟢 активна' if r['status']=='active' else 'закрыта'}\n  {html_escape(r['started_at'])}"+(f" — {html_escape(r['ended_at'])}" if r['ended_at'] else ''))
+        kb=[[InlineKeyboardButton("Все сотрудники",callback_data="admin:shifts")]]
+        kb += [[InlineKeyboardButton(employee_label(x)[:55],callback_data=f"admin:shifts:staff:{x['telegram_id']}")] for x in staff[:12]] if staff_filter is None else [[InlineKeyboardButton("👥 Все сотрудники",callback_data="admin:shifts")]]
+        nav=[]
+        if page>0: nav.append(InlineKeyboardButton("◀️ Назад",callback_data=f"admin:shifts:page:{staff_filter or 0}:{page-1}"))
+        if (page+1)*page_size<total: nav.append(InlineKeyboardButton("Далее ▶️",callback_data=f"admin:shifts:page:{staff_filter or 0}:{page+1}"))
+        if nav: kb.append(nav)
+        kb.append([InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")])
+        await edit_or_send(q.message,"\n".join(lines)[:4000],parse_mode="HTML",reply_markup=InlineKeyboardMarkup(kb))
     elif action.startswith("staff:approve:") or action.startswith("staff:role:"):
-        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        if employee['role'] not in ('admin','manager'): await edit_or_send(q.message, "Недостаточно прав."); return
         _,_,target,role=action.split(":")
         if role not in ('admin','manager','waiter','trainee'): return
         with db_connect() as con:
             con.execute("UPDATE employees SET role=?,status='approved',approved_at=COALESCE(approved_at,?),approved_by=? WHERE telegram_id=?",(role,now_iso(),uid,int(target))); con.commit()
-        await q.message.reply_text(f"Сотрудник {target}: {role_label(role)}.")
+        await edit_or_send(q.message, f"Сотрудник {target}: {role_label(role)}.")
         try: await context.bot.send_message(int(target),f"✅ Доступ одобрен. Твоя роль: {role_label(role)}. Напиши /start.",reply_markup=main_keyboard(get_employee(int(target)) or {}))
         except Exception: pass
     elif action.startswith("staff:reject:"):
-        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        if employee['role'] not in ('admin','manager'): await edit_or_send(q.message, "Недостаточно прав."); return
         target=int(action.split(":")[-1])
         with db_connect() as con: con.execute("UPDATE employees SET status='rejected' WHERE telegram_id=?",(target,)); con.commit()
         await q.edit_message_text(f"Доступ сотруднику {target} отключён.",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("👥 К сотрудникам",callback_data="admin:employees")],[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]]))
