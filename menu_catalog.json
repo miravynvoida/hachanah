@@ -14,7 +14,7 @@
       "wow": "Разрезаем за столом гостей ножом меццалуна",
       "speech": "На какое количество частей для Вас порезать пирог?",
       "image": "/images/main-cellImage_0_0.jpg",
-      "price": null
+      "price": 670
     },
     {
       "id": "f6245b2211b8ea",
@@ -27,7 +27,7 @@
       "wow": "подача: рассказать историю блюда",
       "speech": "\"Этот вид хачапури символизирует рыбацкую лодку, а желток-солнце над водной гладью Предлагаю вам перемешать начинку и есть руками, отламывая хлебные борта и макать их в сыр\"",
       "image": "/images/main-cellImage_0_1.jpg",
-      "price": null
+      "price": 590
     },
     {
       "id": "bbcfde64989e36",
@@ -40,7 +40,7 @@
       "wow": "подача: режем ножом мецалуна при госте, рассказываем историю блюда",
       "speech": "однажды в одном из регионов Грузии решили приготовить более \"богатую\" версию хачапури, щедро добавив сыр не только внутрь, но и поверх знаменитой выпечки с тех пор этот хачапури носит гордое название-королевский",
       "image": "/images/main-cellImage_0_2.jpg",
-      "price": null
+      "price": 780
     },
     {
       "id": "0ca29d8f56dd92",
@@ -53,7 +53,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_3.jpg",
-      "price": null
+      "price": 590
     },
     {
       "id": "ba8d2576660b49",
@@ -66,7 +66,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_4.jpg",
-      "price": null
+      "price": 590
     },
     {
       "id": "4c46848d1c1511",
@@ -79,7 +79,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_5.jpg",
-      "price": null
+      "price": 590
     },
     {
       "id": "f6ae43b31cd062",
@@ -92,7 +92,7 @@
       "wow": "Разрезаем за столом гостей ножом меццалуна",
       "speech": "На какое количество частей для Вас порезать хачапури?",
       "image": "/images/main-cellImage_0_6.jpg",
-      "price": null
+      "price": 590
     },
     {
       "id": "07b788e76d39cb",
@@ -105,7 +105,7 @@
       "wow": "Разрезаем за столом гостей ножом меццалуна",
       "speech": "На какое количество частей для Вас порезать хачапури?",
       "image": "/images/main-cellImage_0_7.jpg",
-      "price": null
+      "price": 690
     },
     {
       "id": "d4d8a7ae99755e",
@@ -118,7 +118,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_8.jpg",
-      "price": null
+      "price": 490
     },
     {
       "id": "0357574a25ed9f",
@@ -131,7 +131,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_9.jpg",
-      "price": null
+      "price": 80
     },
     {
       "id": "de1bb554b48b6a",
@@ -144,7 +144,7 @@
       "wow": "При подаче - приносим гостю бокс с перчатками обязательно",
       "speech": "",
       "image": "/images/main-cellImage_0_10.jpg",
-      "price": null
+      "price": 890
     },
     {
       "id": "33e7da83510284",
@@ -157,7 +157,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_11.jpg",
-      "price": null
+      "price": 120
     },
     {
       "id": "766f2cb2a1069e",
@@ -170,7 +170,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_12.jpg",
-      "price": null
+      "price": 390
     },
     {
       "id": "5239de463d12a0",
@@ -183,7 +183,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_13.jpg",
-      "price": null
+      "price": 830
     },
     {
       "id": "2960e84a8a00c0",
@@ -196,7 +196,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_14.jpg",
-      "price": null
+      "price": 830
     },
     {
       "id": "2e706990ab7e7f",
@@ -209,7 +209,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_15.jpg",
-      "price": null
+      "price": 480
     },
     {
       "id": "b5c5ea9fd17a5e",
@@ -222,7 +222,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_16.jpg",
-      "price": null
+      "price": 480
     },
     {
       "id": "280703e1a9f92f",
@@ -235,7 +235,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_17.jpg",
-      "price": null
+      "price": 570
     },
     {
       "id": "02d0f4c4c91ffc",
@@ -261,7 +261,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_19.jpg",
-      "price": null
+      "price": 430
     },
     {
       "id": "c0d9256922452b",
@@ -274,7 +274,7 @@
       "wow": "подача: Натереть сыр пармезан при госте",
       "speech": "Позвольте, пармезан для Вас",
       "image": null,
-      "price": null
+      "price": 640
     },
     {
       "id": "8d6eeb2f7eec79",
@@ -287,7 +287,7 @@
       "wow": "подача: Натереть сыр пармезан при госте",
       "speech": "Позвольте, пармезан для Вас",
       "image": "/images/main-cellImage_0_21.jpg",
-      "price": null
+      "price": 580
     },
     {
       "id": "4c5cea1883f47b",
@@ -300,7 +300,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_21.jpg",
-      "price": null
+      "price": 580
     },
     {
       "id": "5869b6c366456f",
@@ -313,7 +313,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_22.jpg",
-      "price": null
+      "price": 580
     },
     {
       "id": "7928af81a46d55",
@@ -326,7 +326,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_23.jpg",
-      "price": null
+      "price": 620
     },
     {
       "id": "606847d9137e0c",
@@ -339,7 +339,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_24.jpg",
-      "price": null
+      "price": 460
     },
     {
       "id": "d24642be93b29d",
@@ -352,7 +352,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_25.jpg",
-      "price": null
+      "price": 390
     },
     {
       "id": "b6a92ed054882a",
@@ -365,7 +365,7 @@
       "wow": "Предложить лед ( по желанию)",
       "speech": "",
       "image": "/images/main-cellImage_0_26.jpg",
-      "price": null
+      "price": 390
     },
     {
       "id": "6e845e2c4c1eb2",
@@ -378,7 +378,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_27.jpg",
-      "price": null
+      "price": 510
     },
     {
       "id": "d05f5031917131",
@@ -391,7 +391,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_28.jpg",
-      "price": null
+      "price": 580
     },
     {
       "id": "1610dc0072f627",
@@ -404,7 +404,7 @@
       "wow": "Подаем с ледяным шотом водки (кроме парка швец и парка сормово) Водка 5 озер",
       "speech": "",
       "image": "/images/main-cellImage_0_29.jpg",
-      "price": null
+      "price": 580
     },
     {
       "id": "392bdbb5a69b11",
@@ -417,7 +417,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_30.jpg",
-      "price": null
+      "price": 590
     },
     {
       "id": "08f6bd65f0bc7a",
@@ -430,7 +430,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_31.jpg",
-      "price": null
+      "price": 460
     },
     {
       "id": "a0d9a3e0997a1e",
@@ -443,7 +443,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_32.jpg",
-      "price": null
+      "price": 720
     },
     {
       "id": "2e33e66c4e5a33",
@@ -456,7 +456,7 @@
       "wow": "При подаче - приносим гостю бокс с перчатками обязательно",
       "speech": "",
       "image": "/images/main-cellImage_0_33.jpg",
-      "price": null
+      "price": 790
     },
     {
       "id": "40700391967c16",
@@ -469,7 +469,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_34.jpg",
-      "price": null
+      "price": 460
     },
     {
       "id": "9fbdcd8fed572b",
@@ -482,7 +482,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_35.jpg",
-      "price": null
+      "price": 760
     },
     {
       "id": "8cc826f2b5d23f",
@@ -508,7 +508,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_37.jpg",
-      "price": null
+      "price": 540
     },
     {
       "id": "b0b391a0ae7ff1",
@@ -521,7 +521,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_38.jpg",
-      "price": null
+      "price": 540
     },
     {
       "id": "5550f7fdf803cb",
@@ -534,7 +534,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_39.jpg",
-      "price": null
+      "price": 520
     },
     {
       "id": "dd38855e0cf5b1",
@@ -547,7 +547,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_40.jpg",
-      "price": null
+      "price": 320
     },
     {
       "id": "65cc912ce1bb37",
@@ -560,7 +560,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_41.jpg",
-      "price": null
+      "price": 320
     },
     {
       "id": "faceedc0da7f72",
@@ -573,7 +573,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_42.jpg",
-      "price": null
+      "price": 460
     },
     {
       "id": "d24049b736bc73",
@@ -586,7 +586,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_43.jpg",
-      "price": null
+      "price": 480
     },
     {
       "id": "c41d79edbbb633",
@@ -599,7 +599,7 @@
       "wow": "подача на триджеке : большой наполеон, разрезаем при госте и подаем на тарелку, на кусок наполеона выкладываем ягоды",
       "speech": "",
       "image": "/images/main-cellImage_0_44.jpg",
-      "price": null
+      "price": 480
     },
     {
       "id": "c02d870da0901a",
@@ -612,7 +612,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/main-cellImage_0_45.jpg",
-      "price": null
+      "price": 480
     },
     {
       "id": "afb260d80fe8e2",
@@ -826,19 +826,6 @@
       "id": "e2ab18e4033df2",
       "name": "Бульон куриный",
       "category": "Бизнес-ланч · Суп 1 и 3 неделя",
-      "section": "Бизнес-ланч",
-      "composition": "Бульон куриный Бедро куриное Яйцо куриное Петрушка Гренки",
-      "description": "Куриный бульон с курицей, петрушкой и пряными гренками",
-      "extra_info": "",
-      "wow": "",
-      "speech": "",
-      "image": null,
-      "price": null
-    },
-    {
-      "id": "83d99bc909697a",
-      "name": "Бульон куриный",
-      "category": "Бизнес-ланч · Суп 2 и 4 неделя",
       "section": "Бизнес-ланч",
       "composition": "Бульон куриный Бедро куриное Яйцо куриное Петрушка Гренки",
       "description": "Куриный бульон с курицей, петрушкой и пряными гренками",
@@ -1096,19 +1083,6 @@
       "price": null
     },
     {
-      "id": "87bacf08fdf43d",
-      "name": "Жаркое с курицей",
-      "category": "Бизнес-ланч · 2 и 4 неделя",
-      "section": "Бизнес-ланч",
-      "composition": "Филе бедра куриного су-вид Шампиньоны Картофель запеченый для жаркого Соус чкмерули Сыр сулугуну Масло растительное Бульон куриный Кинза",
-      "description": "Жаркое из курицы, с картофелем и шампиньонами, под сливочно-чесночным соусом чкмерули и запеченым сыром сулугуни. Украшается ароматной кинзой.",
-      "extra_info": "",
-      "wow": "",
-      "speech": "",
-      "image": null,
-      "price": null
-    },
-    {
       "id": "20af80c1fb1919",
       "name": "Минтай в кляре с картофельным пюре",
       "category": "Бизнес-ланч · 1 и 3 неделя",
@@ -1145,7 +1119,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_0.jpg",
-      "price": null
+      "price": 320
     },
     {
       "id": "31130e564bdf08",
@@ -1158,7 +1132,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_1.jpg",
-      "price": null
+      "price": 320
     },
     {
       "id": "db2f5c72fff7d4",
@@ -1171,7 +1145,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_2.jpg",
-      "price": null
+      "price": 320
     },
     {
       "id": "3b7304bc3b472e",
@@ -1184,7 +1158,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_3.jpg",
-      "price": null
+      "price": 340
     },
     {
       "id": "cea9e798a2741c",
@@ -1197,7 +1171,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_4.jpg",
-      "price": null
+      "price": 340
     },
     {
       "id": "9967849da46092",
@@ -1210,7 +1184,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_5.jpg",
-      "price": null
+      "price": 280
     },
     {
       "id": "02d442ce75925e",
@@ -1223,7 +1197,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_6.jpg",
-      "price": null
+      "price": 280
     },
     {
       "id": "8d9c5042922d57",
@@ -1236,7 +1210,7 @@
       "wow": "",
       "speech": "",
       "image": "/images/kids-cellImage_1361158988_7.jpg",
-      "price": null
+      "price": 320
     },
     {
       "id": "9b1c07d4ef43ab",
@@ -1249,7 +1223,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 100
     },
     {
       "id": "fcf86829e3fa56",
@@ -1262,7 +1236,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 100
     },
     {
       "id": "a1365b84090069",
@@ -1275,7 +1249,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 130
     },
     {
       "id": "60d9d708e76892",
@@ -1301,7 +1275,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 100
     },
     {
       "id": "1566a63186b1bc",
@@ -1314,7 +1288,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 130
     },
     {
       "id": "19be32e03d1e17",
@@ -1340,7 +1314,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 130
     },
     {
       "id": "0a42972e8766b4",
@@ -1639,7 +1613,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 160
     },
     {
       "id": "86ee608d6cff23",
@@ -1652,7 +1626,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 180
     },
     {
       "id": "0e29e2f24bb7e9",
@@ -1665,7 +1639,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 180
     },
     {
       "id": "4e8716db2dbe2f",
@@ -1678,7 +1652,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 290
     },
     {
       "id": "4a822cd56373a0",
@@ -1691,7 +1665,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 290
     },
     {
       "id": "f3bb618484f739",
@@ -1704,7 +1678,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 380
     },
     {
       "id": "48955f9cefcf59",
@@ -1717,7 +1691,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 320
     },
     {
       "id": "3080fd53bf3ea3",
@@ -1730,7 +1704,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 320
     },
     {
       "id": "453f0d624f1517",
@@ -1743,7 +1717,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "22061d8743fec6",
@@ -1756,7 +1730,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "bf00eb8100bbcf",
@@ -1769,7 +1743,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "8f7f72fae016e0",
@@ -1782,7 +1756,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "aa01f51cbd4768",
@@ -1795,7 +1769,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "7ae5502f37853a",
@@ -1808,7 +1782,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "fce1fa17018b6b",
@@ -1821,7 +1795,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "7b946654bd5200",
@@ -1834,7 +1808,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "ca0a749474c116",
@@ -1847,7 +1821,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "d6baf620558285",
@@ -1860,7 +1834,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "3380fc9954f66a",
@@ -1873,7 +1847,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 540
     },
     {
       "id": "b2f10a23698517",
@@ -1886,7 +1860,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 540
     },
     {
       "id": "5cc4e18ed7532a",
@@ -1899,7 +1873,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 540
     },
     {
       "id": "9da1ee2194bda2",
@@ -1912,7 +1886,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 540
     },
     {
       "id": "9e89c21617140c",
@@ -1925,7 +1899,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 540
     },
     {
       "id": "679e1d4f3086e6",
@@ -1938,7 +1912,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 310
     },
     {
       "id": "b5cda48a42324f",
@@ -1951,7 +1925,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 260
     },
     {
       "id": "209afcda7a7390",
@@ -1964,7 +1938,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 280
     },
     {
       "id": "50235b480fa027",
@@ -1977,7 +1951,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 380
     },
     {
       "id": "3af858441b487a",
@@ -1990,7 +1964,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 190
     },
     {
       "id": "d1fa5616c4eb5a",
@@ -2003,7 +1977,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "18f0f7c6844525",
@@ -2016,7 +1990,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 420
     },
     {
       "id": "08b5348acb409c",
@@ -2029,7 +2003,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "c4d784f6b39449",
@@ -2042,7 +2016,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "a6ec8390d2b7a8",
@@ -2055,7 +2029,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "363522818267d9",
@@ -2068,7 +2042,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "d4c9c66130c0a8",
@@ -2081,11 +2055,11 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 390
     },
     {
       "id": "fa23b2ed448860",
-      "name": "Мохито",
+      "name": "Мохито безалкогольный",
       "category": "Бар · Безалкогольные коктейли",
       "section": "Бар",
       "composition": "",
@@ -2094,7 +2068,7 @@
       "wow": "",
       "speech": "",
       "image": null,
-      "price": null
+      "price": 380
     },
     {
       "id": "1688bd157631f6",
@@ -2107,7 +2081,1385 @@
       "wow": "",
       "speech": "",
       "image": null,
+      "price": 360
+    },
+    {
+      "id": "b0767af5379756",
+      "name": "Добавка к зеленому салату — курица",
+      "category": "Добавки",
+      "section": "Основное меню",
+      "composition": "",
+      "description": "Добавка к зеленому салату.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 160
+    },
+    {
+      "id": "6d33a5da0cce27",
+      "name": "Добавка к зеленому салату — креветка",
+      "category": "Добавки",
+      "section": "Основное меню",
+      "composition": "",
+      "description": "Добавка к зеленому салату.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 180
+    },
+    {
+      "id": "62e02956d9318f",
+      "name": "Хинкали с курицей (1 шт.)",
+      "category": "Хинкали",
+      "section": "Основное меню",
+      "composition": "",
+      "description": "Цена указана за 1 штуку.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 100
+    },
+    {
+      "id": "0358fa371e74ab",
+      "name": "Хинкали с говядиной и свининой (1 шт.)",
+      "category": "Хинкали",
+      "section": "Основное меню",
+      "composition": "",
+      "description": "Цена указана за 1 штуку.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 100
+    },
+    {
+      "id": "216bc48856e252",
+      "name": "Хинкали с сыром и тархуном (1 шт.)",
+      "category": "Хинкали",
+      "section": "Основное меню",
+      "composition": "",
+      "description": "Цена указана за 1 штуку.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 110
+    },
+    {
+      "id": "01003822f7045a",
+      "name": "Хинкали с бараниной (1 шт.)",
+      "category": "Хинкали",
+      "section": "Основное меню",
+      "composition": "",
+      "description": "Цена указана за 1 штуку.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 110
+    },
+    {
+      "id": "072ebd75d86695",
+      "name": "Хинкали том-ям (1 шт.)",
+      "category": "Хинкали",
+      "section": "Основное меню",
+      "composition": "",
+      "description": "Цена указана за 1 штуку.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 120
+    },
+    {
+      "id": "91dd8f0aea4a41",
+      "name": "Томат с аджикой",
+      "category": "Соусы",
+      "section": "Соусы и специи",
+      "composition": "",
+      "description": "Соус.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 100
+    },
+    {
+      "id": "ccf59faee65174",
+      "name": "Сметана",
+      "category": "Соусы",
+      "section": "Соусы и специи",
+      "composition": "",
+      "description": "Соус.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 100
+    },
+    {
+      "id": "71f7ac56c73af8",
+      "name": "Мацони",
+      "category": "Соусы",
+      "section": "Соусы и специи",
+      "composition": "",
+      "description": "Соус.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 100
+    },
+    {
+      "id": "6e9c58624ed58f",
+      "name": "Сырный соус",
+      "category": "Соусы",
+      "section": "Соусы и специи",
+      "composition": "",
+      "description": "Соус.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 100
+    },
+    {
+      "id": "049c61fd2874c1",
+      "name": "Медово-горчичный соус",
+      "category": "Соусы",
+      "section": "Соусы и специи",
+      "composition": "",
+      "description": "Соус.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 130
+    },
+    {
+      "id": "8b03927124e26e",
+      "name": "Бизнес-ланч — 2 блюда",
+      "category": "Бизнес-ланч",
+      "section": "Бизнес-ланч",
+      "composition": "",
+      "description": "Обычный бизнес-ланч, 2 блюда.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 350
+    },
+    {
+      "id": "20e1e9be1f8a4e",
+      "name": "Бизнес-ланч — 3 блюда",
+      "category": "Бизнес-ланч",
+      "section": "Бизнес-ланч",
+      "composition": "",
+      "description": "Обычный бизнес-ланч, 3 блюда.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 380
+    },
+    {
+      "id": "0bfeb3e197710a",
+      "name": "Хит-ланч — 2 блюда",
+      "category": "Бизнес-ланч",
+      "section": "Бизнес-ланч",
+      "composition": "",
+      "description": "Хит-ланч, 2 блюда.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "6bdbb14727a8c0",
+      "name": "Хит-ланч — 3 блюда",
+      "category": "Бизнес-ланч",
+      "section": "Бизнес-ланч",
+      "composition": "",
+      "description": "Хит-ланч, 3 блюда.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 520
+    },
+    {
+      "id": "4fc2287fd3c602",
+      "name": "Домашний лимонад — стакан 350 мл (ассортимент)",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Любой лимонад из ассортимента, 350 мл.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "68dcb25e8d4521",
+      "name": "Домашний лимонад — графин 1 л (ассортимент)",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Любой лимонад из ассортимента, 1 литр.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 940
+    },
+    {
+      "id": "70ab5c5dc7e974",
+      "name": "Боржоми 330 мл",
+      "category": "Вода",
+      "section": "Бар",
+      "composition": "",
+      "description": "Газированная минеральная вода.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 280
+    },
+    {
+      "id": "ac776e6b188afd",
+      "name": "Боржоми 750 мл",
+      "category": "Вода",
+      "section": "Бар",
+      "composition": "",
+      "description": "Газированная минеральная вода.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "7e810d6fdf414a",
+      "name": "Ягодный морс 200 мл",
+      "category": "Холодные напитки",
+      "section": "Бар",
+      "composition": "",
+      "description": "Ягодный морс.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 190
+    },
+    {
+      "id": "6b3e4875208982",
+      "name": "Ягодный морс 1 л",
+      "category": "Холодные напитки",
+      "section": "Бар",
+      "composition": "",
+      "description": "Ягодный морс.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 620
+    },
+    {
+      "id": "eaf4c790b65b7c",
+      "name": "Добавка к чаю/кофе: сироп, мята, молоко, сливки, лимон, мёд или чабрец",
+      "category": "Добавки",
+      "section": "Бар",
+      "composition": "",
+      "description": "Цена указана за одну добавку.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 80
+    },
+    {
+      "id": "870f2bfa86e946",
+      "name": "Какао",
+      "category": "Кофе",
+      "section": "Бар",
+      "composition": "",
+      "description": "Какао.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 380
+    },
+    {
+      "id": "d0aa463b8e10a8",
+      "name": "Лимонад Смородина-специи — 350 мл",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Смородина-специи», 350 мл.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "8f4781053abe10",
+      "name": "Лимонад Смородина-специи — 1 л",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Смородина-специи», 1 литр.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 940
+    },
+    {
+      "id": "f5062b955c86f7",
+      "name": "Лимонад Грейпфрут-бузина — 350 мл",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Грейпфрут-бузина», 350 мл.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "b834a2dacb691d",
+      "name": "Лимонад Грейпфрут-бузина — 1 л",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Грейпфрут-бузина», 1 литр.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 940
+    },
+    {
+      "id": "02be8476a4ac11",
+      "name": "Лимонад Щавель-лимон — 350 мл",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Щавель-лимон», 350 мл.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "b6aec0df099d0d",
+      "name": "Лимонад Щавель-лимон — 1 л",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Щавель-лимон», 1 литр.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 940
+    },
+    {
+      "id": "3b0378810037cb",
+      "name": "Лимонад Дуб-юдзу — 350 мл",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Дуб-юдзу», 350 мл.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "c7935d52faa6c4",
+      "name": "Лимонад Дуб-юдзу — 1 л",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Дуб-юдзу», 1 литр.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 940
+    },
+    {
+      "id": "e869fa68711bce",
+      "name": "Лимонад Умами — 350 мл",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Умами», 350 мл.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "a5aa42550191b0",
+      "name": "Лимонад Умами — 1 л",
+      "category": "Лимонады",
+      "section": "Бар",
+      "composition": "",
+      "description": "Домашний лимонад «Умами», 1 литр.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 940
+    },
+    {
+      "id": "e3fdb6b733ea25",
+      "name": "Ежевичный глинтвейн",
+      "category": "Алкогольные коктейли",
+      "section": "Бар",
+      "composition": "Апельсины, лимоны, яблоко, специи (гвоздика, анис, корица), ежевичное вино, мёд.",
+      "description": "Согревающий глинтвейн на ежевичном вине с цитрусами и ароматными специями.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 480
+    },
+    {
+      "id": "df6137198d6d47",
+      "name": "Параскеви (глинтвейн)",
+      "category": "Алкогольные коктейли",
+      "section": "Бар",
+      "composition": "Апельсины, Лимоны, Яблоко Специи (гвоздика, анис, корица) Вино Домашнее (белое или красное, по желанию гостя) Мед",
+      "description": "Согревающий глинтвейн из красного вина со специями Подается в бокайле айриш или стеклянной кружке. Обязательно с ложкой и трубочкой отдельно. Трубочку в кипяток НЕЛЬЗЯ!",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 460
+    },
+    {
+      "id": "74670c465ddd72",
+      "name": "Спритц «Апельсин»",
+      "category": "Алкогольные коктейли",
+      "section": "Бар",
+      "composition": "Вино белое сухое Сироп апельсин спритц б/а Сок лимона Газированная вода Апельсин",
+      "description": "Алкогольный коктейль на основе белого сухого вина и апельсинового сиропа, украшается  долькой апельсина. Подается в винном бокале со льдом, с короткими трубочками.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "7b2ba173d617cb",
+      "name": "Спритц «Маракуйя-лайм»",
+      "category": "Алкогольные коктейли",
+      "section": "Бар",
+      "composition": "Вино игристое сухое Ликер \"Маракуйя\" Сахарный сироп Газированная вода Лайм",
+      "description": "Алкогольный коктейль на основе сухого игристого вина и ликера маракуйя, украшается  долькой лайма. Подается в винном бокале со льдом, с короткими трубочками.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "f07015cd117077",
+      "name": "Мохито алко",
+      "category": "Алкогольные коктейли",
+      "section": "Бар",
+      "composition": "Лайм Мята свежая Вода Минеральная Сахарный сироп Ром белый",
+      "description": "Классический коктейль из белого рома, свежей мяты и соком лайма. Готовится с крошеным льдом фраппе. Отдается в бокале воднике. Подаем с короткими трубочками",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 520
+    },
+    {
+      "id": "bb3f47b9379464",
+      "name": "Baltika 7, алк. 5,4%",
+      "category": "Пиво",
+      "section": "Бар",
+      "composition": "Россия, светлое, фильтрованное",
+      "description": "Классический светлый лагер - продается на разлив и подается к \"Гора чебуреков\"",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 440
+    },
+    {
+      "id": "b97013a257aac0",
+      "name": "Krone Blanche Biere, алк. 4,5%",
+      "category": "Пиво",
+      "section": "Бар",
+      "composition": "Россия, светлое, нефильтрованное",
+      "description": "Оригинальный пшеничный сорт с цитрусовыми нотками",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 460
+    },
+    {
+      "id": "96a37224d30932",
+      "name": "Балтика светлое безалкогольное №0, 330 мл",
+      "category": "Безалкогольное пиво",
+      "section": "Бар",
+      "composition": "Россия, светлое, безалкогольное",
+      "description": "Балтика 0 Светлое — безалкогольное пиво, обладающее насыщенным вкусом и ароматом классического светлого лагера благодаря специальной технологии производства. Для варки Балтика 0 Светлое используются особые дрожжи, которые позволяют повторить классический процесс пивоварения, только без выработки алкоголя. Идеальная подача продукта: от +2 °C до +4 °C.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 390
+    },
+    {
+      "id": "853e883cfa3ec1",
+      "name": "Казбеги, алк. 4,7%, 0,5 л, стекло",
+      "category": "Пиво",
+      "section": "Бар",
+      "composition": "Грузия, светлое, фильтрованное",
+      "description": "Хороший грузинский, плотный по вкусу лагер",
+      "extra_info": "НН",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "773059fef35f03",
+      "name": "Домашнее вино красное полусладкое — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 380
+    },
+    {
+      "id": "b46104ad582834",
+      "name": "Домашнее вино красное полусладкое — 1 л",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 3040
+    },
+    {
+      "id": "0c3900da87fc5c",
+      "name": "Домашнее вино красное сухое — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 380
+    },
+    {
+      "id": "ad11f5512bdbc5",
+      "name": "Домашнее вино красное сухое — 1 л",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 3040
+    },
+    {
+      "id": "4f180703bb80b4",
+      "name": "Домашнее вино белое полусладкое — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 380
+    },
+    {
+      "id": "673ad939cb66e7",
+      "name": "Домашнее вино белое полусладкое — 1 л",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 3040
+    },
+    {
+      "id": "58d8c45b67fcd1",
+      "name": "Домашнее вино белое сухое — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 380
+    },
+    {
+      "id": "c271045d138d79",
+      "name": "Домашнее вино белое сухое — 1 л",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Полусладкое , Виноград: Первенец Магарача, Ркацители, Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Классическое домашнее вино краснодарского края",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 3040
+    },
+    {
+      "id": "3d2736b5c6e576",
+      "name": "Ежевичное вино — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Плодовое, Полусладкое , Состав: Ежевика, Яблоко Страна: Россия, Санкт-Петербург, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Плодовое вино на основе сока ежевики с добавлением дубового меда",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 470
+    },
+    {
+      "id": "163b40c65e998c",
+      "name": "Ежевичное вино — 1 л",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Плодовое, Полусладкое , Состав: Ежевика, Яблоко Страна: Россия, Санкт-Петербург, Подача: Бокал, 125 мл, Кувшин 1 литр",
+      "description": "Плодовое вино на основе сока ежевики с добавлением дубового меда",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 3760
+    },
+    {
+      "id": "1784bcf1a0fe26",
+      "name": "Гранатовое вино — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Плодовое, Полусладкое , Состав: Гранат, Черноплодная рябина Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 0,75 мл",
+      "description": "Вино из отборных гранатов с терпко-кислым вкусом и легкой сладостью",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 480
+    },
+    {
+      "id": "358474a41143b6",
+      "name": "Гранатовое вино — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Плодовое, Полусладкое , Состав: Гранат, Черноплодная рябина Страна: Россия, Краснодар, Подача: Бокал, 125 мл, Кувшин 0,75 мл",
+      "description": "Вино из отборных гранатов с терпко-кислым вкусом и легкой сладостью",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2880
+    },
+    {
+      "id": "2612e3123cf9eb",
+      "name": "Алазанская долина белое — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Красное, Полусладкое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктово-пряными оттенками во вкусе",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 460
+    },
+    {
+      "id": "62278ffcfe154f",
+      "name": "Алазанская долина белое — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Полусладкое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктово-пряными оттенками во вкусе",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2760
+    },
+    {
+      "id": "6ebb8d7d23b6dd",
+      "name": "Ркацители — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Ркацители Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктовым араматом с оттенком белой черешни и печеного яблока",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "6cd618c7b45419",
+      "name": "Ркацители — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Ркацители Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктовым араматом с оттенком белой черешни и печеного яблока",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2940
+    },
+    {
+      "id": "6f1b1aa901e87f",
+      "name": "Цинандали Кахетия — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Ркацители, Мцване Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с ароматом белых яблок, груш и луговых цветов",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "8515423ad0b33d",
+      "name": "Цинандали Кахетия — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Ркацители, Мцване Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с ароматом белых яблок, груш и луговых цветов",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2940
+    },
+    {
+      "id": "1cf7154ac556e8",
+      "name": "Пино Гриджио — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Пино Гриджио Страна: Италия, Венето, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Свежее вино с ароматом цитрусовых и легким фруктовым вкусом",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 730
+    },
+    {
+      "id": "dab52f822be3ac",
+      "name": "Пино Гриджио — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Пино Гриджио Страна: Италия, Венето, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Свежее вино с ароматом цитрусовых и легким фруктовым вкусом",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 4380
+    },
+    {
+      "id": "7f4b336f7c1452",
+      "name": "Урбан Сан Рислинг Кубань — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Рислинг Страна: Россия, Краснодарский Край, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Тихое вино с ароматом цитрусовых и свежим вкусом с минеральными тонами",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 460
+    },
+    {
+      "id": "00e17322b7606e",
+      "name": "Урбан Сан Рислинг Кубань — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, Сухое , Виноград: Рислинг Страна: Россия, Краснодарский Край, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Тихое вино с ароматом цитрусовых и свежим вкусом с минеральными тонами",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2760
+    },
+    {
+      "id": "58e82de1ec17f8",
+      "name": "Макитра Брют Блан — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Белое, брют (сухое). Виноград: Пино блан, Бианка, Алиготе, Траминер, Цитронный Магарача. Россия, Кубань. Бутылка 750 мл.",
+      "description": "Ароматика с нотами зеленых яблок, цитрусовых, белых персиков и нектаринов, весенних цветов.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 3400
+    },
+    {
+      "id": "3ecff8a9685a31",
+      "name": "Алазанская долина красное полусладкое — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Красное, Полусладкое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктово-пряными оттенками во вкусе",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 460
+    },
+    {
+      "id": "24c578d7eeeb85",
+      "name": "Алазанская долина красное полусладкое — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Полусладкое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктово-пряными оттенками во вкусе",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2760
+    },
+    {
+      "id": "41208a43e2efbd",
+      "name": "Саперави — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктовым вкусом и легкой танниностью",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "35d062a52f2ca9",
+      "name": "Саперави — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с фруктовым вкусом и легкой танниностью",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2940
+    },
+    {
+      "id": "96dd8df022b92b",
+      "name": "Мукузани — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с мягкими танинами и долгим фруктовым послевкусием",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 730
+    },
+    {
+      "id": "9eb2c922534e3f",
+      "name": "Мукузани — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Вино с мягкими танинами и долгим фруктовым послевкусием",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 4380
+    },
+    {
+      "id": "1e4570f0ec2a51",
+      "name": "Киндзмараули — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Красное, Полусладкое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Тихое вино с фруктовыми тонами ежевики и черного перца с бархатистым сбалансированным вкусом",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 670
+    },
+    {
+      "id": "2df74eb986c4f7",
+      "name": "Киндзмараули — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Полусладкое , Виноград: Саперави Страна: Грузия, Кахетия, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Тихое вино с фруктовыми тонами ежевики и черного перца с бархатистым сбалансированным вкусом",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 4020
+    },
+    {
+      "id": "54567312a7a342",
+      "name": "Хванчкара — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Полусладкое , Виноград: Александроули, Муджуретули Страна: Грузия, Рача, Подача: Бутылка 750 мл",
+      "description": "Вино с нежными танинами, ароматом земляники и легой кислинкой",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 5400
+    },
+    {
+      "id": "ead1fb965a7736",
+      "name": "Chianti — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Санджовезе, Канайоло Страна: Италия, Тоскана, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Тихое вино с ароматом черешни и ягодным бархатным вкусом",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 670
+    },
+    {
+      "id": "767b316fc14419",
+      "name": "Chianti — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Санджовезе, Канайоло Страна: Италия, Тоскана, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Тихое вино с ароматом черешни и ягодным бархатным вкусом",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 4020
+    },
+    {
+      "id": "024fc9194fce0e",
+      "name": "High Roof Cabernet Franc — 125 мл",
+      "category": "Вино по бокалам",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Каберне фран Страна: Россия, Краснодарские Край, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Ароматное вино с тонами вишни и ежевики с освежающим ягодным послевкусием",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 460
+    },
+    {
+      "id": "21199129cc8ad9",
+      "name": "High Roof Cabernet Franc — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Каберне фран Страна: Россия, Краснодарские Край, Подача: Бокал, 125 мл, Бутылка 750 мл",
+      "description": "Ароматное вино с тонами вишни и ежевики с освежающим ягодным послевкусием",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 2760
+    },
+    {
+      "id": "136aaa786d992a",
+      "name": "Malbec Coleccion Privada — 750 мл",
+      "category": "Вино",
+      "section": "Бар",
+      "composition": "Красное, Сухое , Виноград: Мальбек Страна: Аргентина, Подача: Бутылка 750 мл",
+      "description": "Тихое вино с ароматами спелых слив и свежих фиалок",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 5600
+    },
+    {
+      "id": "fee05cb034f55c",
+      "name": "Водка «5 озёр» — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "",
+      "description": "Водка обладает классическим водочным вкусом и чистым ароматом",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 220
+    },
+    {
+      "id": "156754ac147b8f",
+      "name": "Водка «Белая берёзка» — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "Подходит к мясным блюдам, овощам, мясным специалитетам",
+      "description": "Продукт из зернового спирта \"Люкс\", в рецептуре есть натуральный березовый сок",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 320
+    },
+    {
+      "id": "655f47739ac09d",
+      "name": "Водка «Гастроном купаж» — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 340
+    },
+    {
+      "id": "61a48889a9f818",
+      "name": "Водка «Сибирский экспресс» — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "Рекомендуем на дижестив или в пару к мясным горячим блюдам, закускам, хинкали",
+      "description": "Аромат с пшеничными нюансами и приятное мягкое послевкусие",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 410
+    },
+    {
+      "id": "f9bb384a406be0",
+      "name": "Водка «Онегин» — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "Рекомендуем на дижестив или в пару к мясным горячим блюдам, закускам, хинкали",
+      "description": "Идеальный баланс мягкости и терпкости",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "92323b26289708",
+      "name": "Чача Асканели Gold — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 470
+    },
+    {
+      "id": "b9cf03e76f1352",
+      "name": "Чача Асканели Platinum — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 470
+    },
+    {
+      "id": "548626acdf870c",
+      "name": "Виски — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 590
+    },
+    {
+      "id": "d45d3c7caed604",
+      "name": "Коньяк Асканели 8 — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 560
+    },
+    {
+      "id": "fd0396ebb18887",
+      "name": "Коньяк Самус VS — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 790
+    },
+    {
+      "id": "3ba40cb59399ab",
+      "name": "Коньяк Коктебель Резерв 7 лет — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "Крым, Россия, Выдержка 7 лет",
+      "description": "Имеет приятно согревающее послевкусие, с нотками южных специй. Преобладает вкус сухофруктов и липового меда, миндаля",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 520
+    },
+    {
+      "id": "2508cabd1581aa",
+      "name": "Ром Ron Barceló Blanco Añejo — 40 мл",
+      "category": "Крепкий алкоголь",
+      "section": "Бар",
+      "composition": "Доминиканская Республика , выдержка 1год",
+      "description": "Крепость 37,5%. Белый ром, изготовленный из ферментированного сока сахарного тростника и выдержанный в дубовых бочках около 18 месяцев",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 490
+    },
+    {
+      "id": "4dfb9c5731d3f6",
+      "name": "Настойка на выбор — 1 шт.",
+      "category": "Настойки",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 220
+    },
+    {
+      "id": "a9467ae23c9248",
+      "name": "Сет настоек — 10 шт.",
+      "category": "Настойки",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 920
+    },
+    {
+      "id": "e751c643a480b5",
+      "name": "Сет настоек «Лодочка» — 20 шт.",
+      "category": "Настойки",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 1290
+    },
+    {
+      "id": "1b3c5c8e353b49",
+      "name": "Baltika Helles, алк. 4.7%",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "Россия, светлое, фильтрованное",
+      "description": "Освежающий лагер с мягким вкусом и почти незаметной горчинкой",
+      "extra_info": "в наличии только в сезон летом, могут меняться",
+      "wow": "",
+      "speech": "",
+      "image": null,
       "price": null
+    },
+    {
+      "id": "a932d13fb2bfea",
+      "name": "Граппа Коктебель Резерв, алк.40%",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "Крым, Россия. Выдержка 6 месяцев. Дубовые бочки.",
+      "description": "Граппа (итал. Grappa) — это традиционный итальянский крепкий алкогольный напиток крепостью от 37,5% до 60%, который изготавливают путем дистилляции (перегонки) виноградного жмыха (выжимок, включающих кожицу, мякоть, косточки и стебли), остающихся после производства вина. Вкус граппы мягкий, приятный, слегка сладковатый, с тонкими фруктовыми оттенками и едва уловимыми карамельными нюансами в послевкусии.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "e60e196a5ffe77",
+      "name": "Сараджшвили 5 лет , алк.40%",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "Грузия. Выдержка 5 лет. Сорт винограда: Цоликаури, Цицка, Горули Мцване",
+      "description": "Коньяк обладает интенсивным, согревающим вкусом с нотами сухофруктов, шоколада, ванили и ириски.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "a6b8832e1d2f7f",
+      "name": "Сараджшвили 8 лет, алк. 40%",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "Грузия. Выдержка 8 лет. Сорт винограда: Цоликаури, Горули Мцване, Чинури",
+      "description": "У коньяка насыщенный, выразительный аромат с нотами темных специй, горького шоколада, карамели и сладкими древесными оттенками.",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "c6d68f3a9c77a1",
+      "name": "Jameson, алк. 40%",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "Ирландия",
+      "description": "популярный мягкий купажированный виски",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "4a88c00d05107e",
+      "name": "Шуйская Брусника",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "",
+      "description": "Настойки покупные, вкусы всегда разные - уточняй у бармена какие в наличии",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "ad7a6d106dc928",
+      "name": "Шуйская Вишня на коньяке",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "ce985e8e37e57d",
+      "name": "Шуйская Малина с Коньяком",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "437a4c2dc3cd9f",
+      "name": "Шуйская Миндаль на коньяке",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "15948cf45f3532",
+      "name": "Шуйская Рябина на коньяке",
+      "category": "Алкогольные напитки",
+      "section": "Бар",
+      "composition": "",
+      "description": "",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": null
+    },
+    {
+      "id": "0df044d3b68663",
+      "name": "Гранатовый глинтвейн",
+      "category": "Алкогольные коктейли",
+      "section": "Бар",
+      "composition": "Апельсины, Лимоны, Яблоко Специи (гвоздика, анис, корица) Вино Гранатовое Мед",
+      "description": "Согревающий глинтвейн на гранатовом вине с цитрусами и ароматными специями Подается в бокайле айриш или стеклянной кружке. Обязательно с ложкой и трубочкой отдельно. Трубочку в кипяток НЕЛЬЗЯ!",
+      "extra_info": "",
+      "wow": "",
+      "speech": "",
+      "image": null,
+      "price": 480
     }
   ]
 }

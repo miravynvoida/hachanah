@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
+from html import escape as html_escape
 import hmac
 import json
 import logging
@@ -10,7 +11,8 @@ import secrets
 import sqlite3
 import time
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta, time as dt_time
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from urllib.parse import parse_qsl
 
@@ -19,7 +21,7 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from telegram import BotCommand, InlineKeyboardButton, InlineKeyboardMarkup, Update, WebAppInfo
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, ContextTypes, filters
 import uvicorn
 
 ROOT = Path(__file__).resolve().parent
@@ -32,6 +34,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN", "").strip()
 WEBAPP_URL = os.getenv("WEBAPP_URL", "").strip().rstrip("/")
 ADMIN_IDS = {int(x.strip()) for x in os.getenv("ADMIN_TELEGRAM_IDS", "").split(",") if x.strip().isdigit()}
 PORT = int(os.getenv("PORT", "3000"))
+RESTAURANT_TZ = ZoneInfo("Europe/Moscow")
 
 logging.basicConfig(level=os.getenv("LOG_LEVEL", "INFO"), format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("restaurant-assistant")
@@ -59,6 +62,7 @@ def init_db() -> None:
             username TEXT,
             first_name TEXT NOT NULL DEFAULT '',
             last_name TEXT NOT NULL DEFAULT '',
+            display_name TEXT NOT NULL DEFAULT '',
             role TEXT NOT NULL DEFAULT 'waiter',
             status TEXT NOT NULL DEFAULT 'pending',
             created_at TEXT NOT NULL,
@@ -73,6 +77,7 @@ def init_db() -> None:
             status TEXT NOT NULL DEFAULT 'active'
         );
         CREATE INDEX IF NOT EXISTS idx_shifts_employee_status ON shifts(employee_id, status);
+        CREATE TABLE IF NOT EXISTS app_settings (key TEXT PRIMARY KEY, value TEXT NOT NULL DEFAULT '');
         CREATE TABLE IF NOT EXISTS menu_items (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
@@ -131,6 +136,9 @@ def init_db() -> None:
         columns = {r[1] for r in con.execute('PRAGMA table_info(menu_items)').fetchall()}
         if 'is_active' not in columns:
             con.execute('ALTER TABLE menu_items ADD COLUMN is_active INTEGER NOT NULL DEFAULT 1')
+        employee_columns = {r[1] for r in con.execute('PRAGMA table_info(employees)').fetchall()}
+        if 'display_name' not in employee_columns:
+            con.execute("ALTER TABLE employees ADD COLUMN display_name TEXT NOT NULL DEFAULT ''")
         con.execute('UPDATE menu_items SET is_active=0')
         if CATALOG_PATH.exists():
             catalog = json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
@@ -143,7 +151,7 @@ def init_db() -> None:
                       name=excluded.name, category=excluded.category, section=excluded.section,
                       composition=excluded.composition, description=excluded.description,
                       extra_info=excluded.extra_info, wow=excluded.wow, speech=excluded.speech,
-                      image=excluded.image, price=COALESCE(menu_items.price, excluded.price), is_active=1
+                      image=excluded.image, price=COALESCE(excluded.price, menu_items.price), is_active=1
                 """, (
                     item["id"], item["name"], item["category"], item["section"],
                     item.get("composition", ""), item.get("description", ""), item.get("extra_info", ""),
@@ -200,13 +208,13 @@ def is_command_admin(telegram_id: int) -> bool:
     if is_admin_id(telegram_id):
         return True
     employee = get_employee(telegram_id)
-    return bool(employee and employee.get('status') == 'approved' and employee.get('role') == 'admin')
+    return bool(employee and employee.get('status') == 'approved' and employee.get('role') in ('admin','manager'))
 
 
 def get_admin_ids() -> set[int]:
     ids = set(ADMIN_IDS)
     with db_connect() as con:
-        rows = con.execute("SELECT telegram_id FROM employees WHERE status='approved' AND role='admin'").fetchall()
+        rows = con.execute("SELECT telegram_id FROM employees WHERE status='approved' AND role IN ('admin','manager')").fetchall()
     ids.update(int(r[0]) for r in rows)
     return ids
 
@@ -225,9 +233,9 @@ def add_or_update_employee(tg_user: dict) -> dict:
     with db_connect() as con:
         existing = con.execute("SELECT * FROM employees WHERE telegram_id=?", (tid,)).fetchone()
         if existing is None:
-            con.execute("""INSERT INTO employees (telegram_id,username,first_name,last_name,role,status,created_at,approved_at)
-                         VALUES (?,?,?,?,?,?,?,?)""",
-                        (tid, username, first_name, last_name,
+            con.execute("""INSERT INTO employees (telegram_id,username,first_name,last_name,display_name,role,status,created_at,approved_at)
+                         VALUES (?,?,?,?,?,?,?,?,?)""",
+                        (tid, username, first_name, last_name, "",
                          "admin" if is_admin else "waiter", "approved" if is_admin else "pending", now_iso(), now_iso() if is_admin else None))
         else:
             con.execute("UPDATE employees SET username=?, first_name=?, last_name=? WHERE telegram_id=?",
@@ -279,31 +287,194 @@ def order_payload(con: sqlite3.Connection, order_id: int) -> dict | None:
 
 
 # --- Telegram bot commands ---
+def role_label(role: str) -> str:
+    return {"admin":"Администратор", "manager":"Управляющий", "waiter":"Официант", "trainee":"Стажёр"}.get(role, role)
+
+
+def employee_label(employee: dict | sqlite3.Row | None) -> str:
+    if not employee: return "Сотрудник"
+    display = str(employee.get("display_name", "") if isinstance(employee, dict) else employee["display_name"] or "").strip() if (isinstance(employee, dict) or "display_name" in employee.keys()) else ""
+    if display: return display
+    first = employee.get("first_name", "") if isinstance(employee, dict) else employee["first_name"]
+    last = employee.get("last_name", "") if isinstance(employee, dict) else employee["last_name"]
+    return " ".join(x for x in (first or "", last or "") if x).strip() or "Сотрудник"
+
+
+def main_keyboard(employee: dict) -> InlineKeyboardMarkup:
+    rows = [
+        [InlineKeyboardButton("🔎 Найти блюдо или напиток", callback_data="menu:search"), InlineKeyboardButton("🚫 Стоп-лист", callback_data="menu:stops")],
+        [InlineKeyboardButton("🟢 Начать смену", callback_data="shift:start"), InlineKeyboardButton("🔴 Завершить смену", callback_data="shift:finish")],
+        [InlineKeyboardButton("👤 Мой профиль", callback_data="menu:profile"), InlineKeyboardButton("📱 Открыть Mini App", web_app=WebAppInfo(url=WEBAPP_URL))] if WEBAPP_URL else [InlineKeyboardButton("👤 Мой профиль", callback_data="menu:profile")],
+    ]
+    if employee.get("role") in ("admin", "manager"):
+        rows.append([InlineKeyboardButton("🛠 Управление сотрудниками", callback_data="admin:home"), InlineKeyboardButton("🕘 Смены команды", callback_data="admin:shifts")])
+    return InlineKeyboardMarkup(rows)
+
+
+async def notify_approved_staff(text: str, exclude: set[int] | None = None) -> None:
+    if not bot_app: return
+    exclude = exclude or set()
+    with db_connect() as con:
+        ids = [int(r[0]) for r in con.execute("SELECT telegram_id FROM employees WHERE status='approved'").fetchall()]
+    for tid in ids:
+        if tid in exclude: continue
+        try: await bot_app.bot.send_message(tid, text, disable_web_page_preview=True)
+        except Exception as exc: log.info("Could not notify employee %s: %s", tid, exc)
+
+
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.effective_user or not update.effective_message: return
     u = update.effective_user
-    employee = add_or_update_employee({"id": u.id, "username": u.username, "first_name": u.first_name, "last_name": u.last_name})
-    name = u.first_name or "сотрудник"
-    if employee.get("status") != "approved":
-        await update.effective_message.reply_text(
-            f"Привет, {name}! Твоя заявка на доступ записана. Попроси менеджера одобрить её.\n\nТвой Telegram ID: {u.id}"
-        )
-        for admin_id in get_admin_ids():
-            try:
-                await context.bot.send_message(admin_id, f"Новая заявка на доступ: {name} (ID {u.id}, @{u.username or 'без username'}).\nОдобрить: /approve {u.id} waiter")
-            except Exception:
-                log.exception("Could not notify admin %s", admin_id)
+    employee = add_or_update_employee({"id":u.id,"username":u.username,"first_name":u.first_name,"last_name":u.last_name})
+    if not str(employee.get("display_name") or "").strip():
+        context.user_data["awaiting_display_name"] = True
+        await update.effective_message.reply_text("Привет! Для регистрации напиши своё ФИО или имя, по которому тебя знают в ресторане. Например: Анна Иванова или просто Анна.")
         return
-    if WEBAPP_URL:
-        keyboard = InlineKeyboardMarkup([[InlineKeyboardButton("Открыть помощника", web_app=WebAppInfo(url=WEBAPP_URL))]])
-        await update.effective_message.reply_text(
-            f"Привет, {name}!\n\nПомощник официанта готов. Начни смену в приложении, чтобы менять стоп-лист и вести черновики заказов.",
-            reply_markup=keyboard
-        )
-    else:
-        await update.effective_message.reply_text(
-            f"Привет, {name}! Доступ подтверждён. Для открытия Mini App администратору нужно задать WEBAPP_URL в настройках хостинга.\nТвой Telegram ID: {u.id}"
-        )
+    if employee.get("status") != "approved":
+        await update.effective_message.reply_text(f"Заявка на доступ уже ожидает подтверждения.\nИмя: {employee_label(employee)}\nTelegram ID: {u.id}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить статус", callback_data="registration:status")]]))
+        return
+    await update.effective_message.reply_text(f"Привет, {employee_label(employee)}!\n\nПомощник официанта готов. Ищи позиции прямо сообщением, управляй стоп-листом и сменой кнопками ниже.", reply_markup=main_keyboard(employee))
+
+
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.effective_user or not update.effective_message: return
+    uid = update.effective_user.id
+    text = (update.effective_message.text or "").strip()
+    if not text or text.startswith("/"): return
+    if context.user_data.get("awaiting_display_name"):
+        if len(text) < 2 or len(text) > 80:
+            await update.effective_message.reply_text("Напиши ФИО или имя длиной от 2 до 80 символов."); return
+        with db_connect() as con:
+            con.execute("UPDATE employees SET display_name=? WHERE telegram_id=?", (text, uid)); con.commit()
+        context.user_data.pop("awaiting_display_name", None)
+        employee = get_employee(uid) or {}
+        if employee.get("status") != "approved":
+            for admin_id in get_admin_ids():
+                try:
+                    await context.bot.send_message(admin_id, f"🆕 Заявка на доступ\nСотрудник: {text}\nTelegram ID: {uid}\nUsername: @{employee.get('username') or 'нет'}", reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("✅ Официант", callback_data=f"staff:approve:{uid}:waiter"), InlineKeyboardButton("🧑‍🍳 Стажёр", callback_data=f"staff:approve:{uid}:trainee")],
+                        [InlineKeyboardButton("🧑‍💼 Управляющий", callback_data=f"staff:approve:{uid}:manager"), InlineKeyboardButton("🛡 Администратор", callback_data=f"staff:approve:{uid}:admin")],
+                        [InlineKeyboardButton("❌ Отклонить", callback_data=f"staff:reject:{uid}")]
+                    ]))
+                except Exception: log.exception("Could not notify manager about application")
+            await update.effective_message.reply_text(f"Спасибо, {text}! Заявка отправлена управляющему/администратору. Доступ появится после одобрения.")
+        else:
+            await update.effective_message.reply_text(f"Профиль сохранён: {text}.", reply_markup=main_keyboard(employee))
+        return
+    employee = get_employee(uid)
+    if not employee or employee.get("status") != "approved":
+        await update.effective_message.reply_text("Сначала отправь /start и дождись подтверждения доступа."); return
+    await search_menu_in_chat(update, context, text)
+
+
+async def search_menu_in_chat(update: Update, context: ContextTypes.DEFAULT_TYPE, query: str) -> None:
+    with db_connect() as con:
+        rows = con.execute("SELECT id,name,category,section,stock_status,price FROM menu_items WHERE is_active=1 AND (name LIKE ? OR category LIKE ? OR composition LIKE ? OR description LIKE ? OR extra_info LIKE ?) ORDER BY CASE WHEN lower(name)=lower(?) THEN 0 WHEN lower(name) LIKE lower(?) THEN 1 ELSE 2 END, name LIMIT 12", (f"%{query}%",)*5 + (query, f"{query}%")).fetchall()
+    if not rows:
+        await update.effective_message.reply_text(f"По запросу «{query}» ничего не нашёл. Попробуй часть названия или ингредиент.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📋 Открыть меню", callback_data="menu:search")]])); return
+    kb = [[InlineKeyboardButton(("🔴 " if r["stock_status"] == "stop" else "🟢 ") + r["name"][:55] + (f" · {int(r['price'])} ₽" if r["price"] is not None else ""), callback_data=f"item:view:{r['id']}")] for r in rows]
+    kb.append([InlineKeyboardButton("🚫 Открыть стоп-лист", callback_data="menu:stops")])
+    await update.effective_message.reply_text(f"🔎 Нашёл по запросу «{query}» — выбери позицию:", reply_markup=InlineKeyboardMarkup(kb))
+
+
+async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    q = update.callback_query
+    if not q: return
+    await q.answer()
+    uid = q.from_user.id
+    employee = get_employee(uid)
+    action = q.data or ""
+    if action == "registration:status":
+        if employee and employee.get("status") == "approved": await q.message.reply_text("Доступ подтверждён. Нажми /start.", reply_markup=main_keyboard(employee))
+        else: await q.message.reply_text("Заявка пока ожидает подтверждения.")
+        return
+    if not employee or employee.get("status") != "approved":
+        await q.message.reply_text("Доступ ещё не одобрен. Нажми /start и отправь ФИО или имя."); return
+    if action == "menu:search":
+        await q.message.reply_text("Напиши название блюда, напитка или часть названия — предложу похожие позиции.")
+    elif action == "menu:stops":
+        with db_connect() as con: rows=con.execute("SELECT id,name,category,stop_reason,price FROM menu_items WHERE is_active=1 AND stock_status='stop' ORDER BY section,category,name").fetchall()
+        if not rows: await q.message.reply_text("✅ Стоп-лист пуст — все позиции доступны.", reply_markup=main_keyboard(employee)); return
+        kb=[[InlineKeyboardButton("🔴 "+r['name'][:55],callback_data=f"item:view:{r['id']}")] for r in rows]
+        await q.message.reply_text("🚫 <b>Стоп-лист</b>\nВыбери позицию, чтобы посмотреть детали или вернуть её.",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
+    elif action == "menu:profile":
+        sh=get_active_shift(uid)
+        await q.message.reply_text(f"👤 <b>{employee_label(employee)}</b>\nРоль: {role_label(employee['role'])}\nСтатус: {employee['status']}\nСмена: {'активна с '+sh['started_at'] if sh else 'не начата'}\nTelegram ID: {uid}",parse_mode="HTML",reply_markup=main_keyboard(employee))
+    elif action in ("shift:start","shift:finish"):
+        if action == "shift:start":
+            if not get_active_shift(uid):
+                with db_connect() as con: con.execute("INSERT INTO shifts(employee_id,started_at,status) VALUES (?,?, 'active')",(uid,now_iso())); con.commit()
+                await notify_approved_staff(f"🟢 Смена началась\n{employee_label(employee)} вышел(ла) на смену.", exclude={uid})
+            await q.message.reply_text("Смена активна.",reply_markup=main_keyboard(employee))
+        else:
+            sh=get_active_shift(uid)
+            if sh:
+                with db_connect() as con: con.execute("UPDATE shifts SET status='closed',ended_at=? WHERE id=?",(now_iso(),sh['id'])); con.commit()
+                await notify_approved_staff(f"🔴 Смена завершена\n{employee_label(employee)} завершил(а) смену.",exclude={uid})
+            await q.message.reply_text("Смена завершена.",reply_markup=main_keyboard(employee))
+    elif action.startswith("item:view:"):
+        item_id=action.split(":",2)[2]
+        with db_connect() as con: item=con.execute("SELECT * FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
+        if not item: await q.message.reply_text("Позиция не найдена."); return
+        text=f"<b>{html_escape(item['name'])}</b>\n{html_escape(item['section'])} · {html_escape(item['category'])}\nСтатус: {'🔴 В стоп-листе' if item['stock_status']=='stop' else '🟢 Доступно'}\nЦена: {str(int(item['price']))+' ₽' if item['price'] is not None else 'не указана'}"
+        for title,col in [("Описание","description"),("Состав","composition"),("Аллергены / дополнительная информация","extra_info"),("Особенности подачи","wow"),("Как рассказать гостю","speech")]:
+            if item[col]: text+=f"\n\n<b>{title}</b>\n{html_escape(item[col])}"
+        if item['stock_status']=='stop': buttons=[[InlineKeyboardButton("✅ Вернуть в меню",callback_data=f"item:restore:{item_id}")]]
+        else: buttons=[[InlineKeyboardButton("🚫 В стоп-лист",callback_data=f"item:stop:{item_id}")]]
+        buttons.append([InlineKeyboardButton("↩️ Главное меню",callback_data="menu:home")])
+        await q.message.reply_text(text[:4000],parse_mode="HTML",reply_markup=InlineKeyboardMarkup(buttons))
+    elif action.startswith("item:stop:") or action.startswith("item:restore:"):
+        if not get_active_shift(uid): await q.message.reply_text("Сначала начни смену — только активный сотрудник может менять стоп-лист."); return
+        verb,item_id=action.split(":",2)[1:]
+        with db_connect() as con:
+            item=con.execute("SELECT id,name,stock_status FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
+            if not item: await q.message.reply_text("Позиция не найдена."); return
+            if verb=='stop' and item['stock_status']!='stop':
+                con.execute("UPDATE menu_items SET stock_status='stop',stop_reason='Добавлено из чата бота',updated_at=?,updated_by=? WHERE id=?",(now_iso(),uid,item_id)); con.execute("INSERT INTO audit_log(item_id,item_name,action,reason,employee_id,created_at) VALUES (?,?,?,?,?,?)",(item_id,item['name'],'stop','Добавлено из чата бота',uid,now_iso())); changed=True
+            elif verb=='restore' and item['stock_status']=='stop':
+                con.execute("UPDATE menu_items SET stock_status='available',stop_reason='',updated_at=?,updated_by=? WHERE id=?",(now_iso(),uid,item_id)); con.execute("INSERT INTO audit_log(item_id,item_name,action,reason,employee_id,created_at) VALUES (?,?,?,?,?,?)",(item_id,item['name'],'restore','',uid,now_iso())); changed=True
+            else: changed=False
+            con.commit()
+        if changed: await notify_approved_staff(("🚫 Добавлено в стоп-лист" if verb=='stop' else "✅ Возвращено в меню")+f"\nПозиция: {item['name']}\nСотрудник: {employee_label(employee)}",exclude={uid})
+        await q.message.reply_text(("Позиция добавлена в стоп-лист." if verb=='stop' else "Позиция возвращена в меню."),reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Открыть позицию",callback_data=f"item:view:{item_id}")],[InlineKeyboardButton("Главное меню",callback_data="menu:home")]]))
+    elif action == "menu:home":
+        await q.message.reply_text("Главное меню помощника:",reply_markup=main_keyboard(employee))
+    elif action == "admin:home":
+        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        await q.message.reply_text("🛠 <b>Управление сотрудниками</b>",parse_mode="HTML",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⏳ Заявки",callback_data="admin:pending"),InlineKeyboardButton("👥 Сотрудники",callback_data="admin:employees")],[InlineKeyboardButton("🕘 Все смены",callback_data="admin:shifts")],[InlineKeyboardButton("⬅️ Главное меню",callback_data="menu:home")]]))
+    elif action == "admin:pending" or action == "admin:employees":
+        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        status='pending' if action.endswith('pending') else 'approved'
+        with db_connect() as con: rows=con.execute("SELECT * FROM employees WHERE status=? ORDER BY display_name,first_name",(status,)).fetchall()
+        if not rows: await q.message.reply_text("Список пуст.",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад",callback_data="admin:home")]])); return
+        for r in rows[:25]:
+            if status=='pending':
+                kb=[[InlineKeyboardButton("Официант",callback_data=f"staff:approve:{r['telegram_id']}:waiter"),InlineKeyboardButton("Стажёр",callback_data=f"staff:approve:{r['telegram_id']}:trainee")],[InlineKeyboardButton("Управляющий",callback_data=f"staff:approve:{r['telegram_id']}:manager"),InlineKeyboardButton("Администратор",callback_data=f"staff:approve:{r['telegram_id']}:admin")],[InlineKeyboardButton("Отклонить",callback_data=f"staff:reject:{r['telegram_id']}")]]
+                await q.message.reply_text(f"⏳ {employee_label(r)} · ID {r['telegram_id']} · @{r['username'] or 'нет'}",reply_markup=InlineKeyboardMarkup(kb))
+            else:
+                kb=[[InlineKeyboardButton("Официант",callback_data=f"staff:role:{r['telegram_id']}:waiter"),InlineKeyboardButton("Стажёр",callback_data=f"staff:role:{r['telegram_id']}:trainee")],[InlineKeyboardButton("Управляющий",callback_data=f"staff:role:{r['telegram_id']}:manager"),InlineKeyboardButton("Администратор",callback_data=f"staff:role:{r['telegram_id']}:admin")],[InlineKeyboardButton("Отключить доступ",callback_data=f"staff:reject:{r['telegram_id']}")]]
+                await q.message.reply_text(f"👤 {employee_label(r)} · {role_label(r['role'])} · ID {r['telegram_id']}",reply_markup=InlineKeyboardMarkup(kb))
+    elif action == "admin:shifts":
+        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        with db_connect() as con: rows=con.execute("SELECT s.*,e.display_name,e.first_name,e.last_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id ORDER BY s.id DESC LIMIT 30").fetchall()
+        lines=["🕘 <b>Смены команды</b>"]
+        for r in rows: lines.append(f"• {employee_label(r)} — {'активна' if r['status']=='active' else 'закрыта'}\n  {r['started_at']}"+(f" — {r['ended_at']}" if r['ended_at'] else ''))
+        await q.message.reply_text("\n".join(lines)[:4000],parse_mode="HTML",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад",callback_data="admin:home")]]))
+    elif action.startswith("staff:approve:") or action.startswith("staff:role:"):
+        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        _,_,target,role=action.split(":")
+        if role not in ('admin','manager','waiter','trainee'): return
+        with db_connect() as con:
+            con.execute("UPDATE employees SET role=?,status='approved',approved_at=COALESCE(approved_at,?),approved_by=? WHERE telegram_id=?",(role,now_iso(),uid,int(target))); con.commit()
+        await q.message.reply_text(f"Сотрудник {target}: {role_label(role)}.")
+        try: await context.bot.send_message(int(target),f"✅ Доступ одобрен. Твоя роль: {role_label(role)}. Напиши /start.",reply_markup=main_keyboard(get_employee(int(target)) or {}))
+        except Exception: pass
+    elif action.startswith("staff:reject:"):
+        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        target=int(action.split(":")[-1])
+        with db_connect() as con: con.execute("UPDATE employees SET status='rejected' WHERE telegram_id=?",(target,)); con.commit()
+        await q.message.reply_text(f"Доступ сотруднику {target} отключён.")
+
 
 async def cmd_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if update.effective_user and update.effective_message:
@@ -342,9 +513,9 @@ async def cmd_approve(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     if not is_command_admin(uid):
         await update.effective_message.reply_text("Эта команда доступна только администратору."); return
     if len(context.args) < 1 or not context.args[0].isdigit():
-        await update.effective_message.reply_text("Формат: /approve TELEGRAM_ID waiter|manager|admin"); return
+        await update.effective_message.reply_text("Формат: /approve TELEGRAM_ID waiter|trainee|manager|admin"); return
     target = int(context.args[0]); role = context.args[1].lower() if len(context.args) > 1 else "waiter"
-    if role not in ("waiter", "manager", "admin"):
+    if role not in ("waiter", "trainee", "manager", "admin"):
         await update.effective_message.reply_text("Роль должна быть waiter, manager или admin."); return
     with db_connect() as con:
         cur = con.execute("UPDATE employees SET role=?,status='approved',approved_at=?,approved_by=? WHERE telegram_id=?", (role, now_iso(), uid, target))
@@ -381,13 +552,67 @@ def build_bot() -> Application | None:
     application.add_handler(CommandHandler("pending", cmd_pending))
     application.add_handler(CommandHandler("approve", cmd_approve))
     application.add_handler(CommandHandler("employees", cmd_employees))
+    application.add_handler(CallbackQueryHandler(bot_callback))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     return application
+
+
+def shift_scheduled_end(started_at: str) -> datetime:
+    dt=datetime.fromisoformat(started_at)
+    if dt.tzinfo is None: dt=dt.replace(tzinfo=timezone.utc)
+    local=dt.astimezone(RESTAURANT_TZ)
+    # Friday/Saturday shifts end at midnight; Sunday-Thursday at 22:00.
+    if local.weekday() in (4,5):
+        target_date=local.date()+timedelta(days=1)
+        return datetime.combine(target_date, dt_time(0,0), tzinfo=RESTAURANT_TZ)
+    return datetime.combine(local.date(), dt_time(22,0), tzinfo=RESTAURANT_TZ)
+
+
+async def maintenance_loop() -> None:
+    while True:
+        try:
+            now_local=datetime.now(RESTAURANT_TZ)
+            with db_connect() as con:
+                active=con.execute("SELECT s.*,e.display_name,e.first_name,e.last_name,e.telegram_id FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id WHERE s.status='active'").fetchall()
+                to_close=[r for r in active if now_local >= shift_scheduled_end(r['started_at'])]
+                for r in to_close:
+                    con.execute("UPDATE shifts SET status='closed',ended_at=? WHERE id=? AND status='active'",(now_iso(),r['id']))
+                con.commit()
+            for r in to_close:
+                await notify_approved_staff(f"⏰ Смена автоматически закрыта по расписанию\nСотрудник: {employee_label(r)}", exclude={int(r['telegram_id'])})
+            # Send yesterday's end-of-day stop list once per local date, at/after 10:00.
+            today=now_local.date().isoformat()
+            if now_local.hour >= 10:
+                with db_connect() as con:
+                    sent=con.execute("SELECT value FROM app_settings WHERE key='last_daily_stop_report'").fetchone()
+                if not sent or sent['value'] != today:
+                    yesterday=(now_local.date()-timedelta(days=1))
+                    cutoff=datetime.combine(yesterday+timedelta(days=1),dt_time(0,0),tzinfo=RESTAURANT_TZ).astimezone(timezone.utc).isoformat(timespec='seconds')
+                    with db_connect() as con:
+                        rows=con.execute("""SELECT m.name,m.category,a.reason,a.created_at,a.employee_id
+                            FROM menu_items m JOIN audit_log a ON a.item_id=m.id
+                            WHERE a.id=(SELECT a2.id FROM audit_log a2 WHERE a2.item_id=m.id AND a2.created_at < ? ORDER BY a2.id DESC LIMIT 1)
+                            AND a.action='stop' ORDER BY m.section,m.category,m.name""",(cutoff,)).fetchall()
+                        con.execute("INSERT INTO app_settings(key,value) VALUES('last_daily_stop_report',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",(today,)); con.commit()
+                    lines=[f"📋 <b>Стоп-лист на конец {yesterday.strftime('%d.%m.%Y')}</b>"]
+                    if rows:
+                        for r in rows: lines.append(f"• {html_escape(r['name'])}"+(f" — {html_escape(r['reason'])}" if r['reason'] else ""))
+                    else: lines.append("На конец дня стоп-лист был пуст.")
+                    text="\n".join(lines)
+                    for tid in get_admin_ids():
+                        try:
+                            if bot_app: await bot_app.bot.send_message(tid,text[:4000],parse_mode='HTML')
+                        except Exception: log.exception("Could not send daily stop report to %s",tid)
+        except Exception:
+            log.exception("Maintenance task failed")
+        await asyncio.sleep(30)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global bot_app
     init_db()
+    maintenance_task = asyncio.create_task(maintenance_loop())
     bot_app = build_bot()
     if bot_app:
         try:
@@ -407,6 +632,9 @@ async def lifespan(app: FastAPI):
             log.exception("Telegram bot failed to start; HTTP server will remain available")
             bot_app = None
     yield
+    maintenance_task.cancel()
+    try: await maintenance_task
+    except asyncio.CancelledError: pass
     if bot_app:
         try:
             if bot_app.updater and bot_app.updater.running: await bot_app.updater.stop()
@@ -430,7 +658,7 @@ async def health():
 async def me(employee: dict = Depends(current_employee)):
     shift = get_active_shift(employee["telegram_id"])
     result = {"telegram_id": employee["telegram_id"], "username": employee["username"],
-              "first_name": employee["first_name"], "last_name": employee["last_name"],
+              "first_name": employee["first_name"], "last_name": employee["last_name"], "display_name": employee.get("display_name", ""),
               "role": employee["role"], "active_shift": shift}
     if employee["role"] in ("manager", "admin"):
         with db_connect() as con:
@@ -471,7 +699,7 @@ async def get_availability(employee: dict = Depends(current_employee)):
 @app.get("/api/stops")
 async def get_stops(employee: dict = Depends(current_employee)):
     with db_connect() as con:
-        rows = con.execute("""SELECT m.*, COALESCE(TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), '') AS updated_by_name
+        rows = con.execute("""SELECT m.*, COALESCE(NULLIF(e.display_name,''), TRIM(COALESCE(e.first_name,'') || ' ' || COALESCE(e.last_name,'')), '') AS updated_by_name
                                  FROM menu_items m LEFT JOIN employees e ON e.telegram_id=m.updated_by
                                  WHERE m.is_active=1 AND m.stock_status='stop' ORDER BY m.category,m.name COLLATE NOCASE""").fetchall()
     return {"items":[dict(r) for r in rows]}
@@ -480,7 +708,7 @@ async def get_stops(employee: dict = Depends(current_employee)):
 async def get_audit(limit: int = 50, employee: dict = Depends(current_employee)):
     limit=max(1,min(limit,150))
     with db_connect() as con:
-        rows=con.execute("SELECT a.*, e.first_name, e.last_name FROM audit_log a LEFT JOIN employees e ON e.telegram_id=a.employee_id ORDER BY a.id DESC LIMIT ?",(limit,)).fetchall()
+        rows=con.execute("SELECT a.*, e.first_name, e.last_name, e.display_name FROM audit_log a LEFT JOIN employees e ON e.telegram_id=a.employee_id ORDER BY a.id DESC LIMIT ?",(limit,)).fetchall()
     return {"events":[dict(r) for r in rows]}
 
 class StopBody(BaseModel):
@@ -492,11 +720,15 @@ async def stop_item(item_id: str, body: StopBody, employee: dict = Depends(curre
     with db_connect() as con:
         item=con.execute("SELECT id,name,stock_status FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
         if not item: raise HTTPException(404,"item_not_found")
+        if item['stock_status'] == 'stop':
+            current=con.execute("SELECT * FROM menu_items WHERE id=?",(item_id,)).fetchone()
+            return {"item":dict(current),"already_stopped":True}
         now=now_iso()
         con.execute("UPDATE menu_items SET stock_status='stop',stop_reason=?,updated_at=?,updated_by=? WHERE id=?",(body.reason.strip(),now,employee["telegram_id"],item_id))
         con.execute("INSERT INTO audit_log(item_id,item_name,action,reason,employee_id,created_at) VALUES (?,?,?,?,?,?)",(item_id,item["name"],"stop",body.reason.strip(),employee["telegram_id"],now))
         con.commit()
         current=con.execute("SELECT * FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
+    await notify_approved_staff(f"🚫 Добавлено в стоп-лист\nПозиция: {item['name']}\nСотрудник: {employee_label(employee)}" + (f"\nПричина: {body.reason.strip()}" if body.reason.strip() else ""), exclude={employee["telegram_id"]})
     return {"item":dict(current)}
 
 @app.post("/api/items/{item_id}/restore")
@@ -505,11 +737,15 @@ async def restore_item(item_id: str, employee: dict = Depends(current_employee))
     with db_connect() as con:
         item=con.execute("SELECT id,name,stock_status FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
         if not item: raise HTTPException(404,"item_not_found")
+        if item['stock_status'] == 'available':
+            current=con.execute("SELECT * FROM menu_items WHERE id=?",(item_id,)).fetchone()
+            return {"item":dict(current),"already_available":True}
         now=now_iso()
         con.execute("UPDATE menu_items SET stock_status='available',stop_reason='',updated_at=?,updated_by=? WHERE id=?",(now,employee["telegram_id"],item_id))
         con.execute("INSERT INTO audit_log(item_id,item_name,action,reason,employee_id,created_at) VALUES (?,?,?,?,?,?)",(item_id,item["name"],"restore","",employee["telegram_id"],now))
         con.commit()
         current=con.execute("SELECT * FROM menu_items WHERE id=? AND is_active=1",(item_id,)).fetchone()
+    await notify_approved_staff(f"✅ Возвращено в меню\nПозиция: {item['name']}\nСотрудник: {employee_label(employee)}", exclude={employee["telegram_id"]})
     return {"item":dict(current)}
 
 @app.post("/api/shifts/start")
@@ -521,6 +757,7 @@ async def start_shift(employee: dict = Depends(current_employee)):
         cur=con.execute("INSERT INTO shifts(employee_id,started_at,status) VALUES (?,?, 'active')",(tid,now_iso()))
         con.commit()
         shift=con.execute("SELECT * FROM shifts WHERE id=?",(cur.lastrowid,)).fetchone()
+    await notify_approved_staff(f"🟢 Смена началась\n{employee_label(employee)} вышел(ла) на смену.", exclude={tid})
     return {"shift":dict(shift),"already_active":False}
 
 @app.post("/api/shifts/finish")
@@ -533,6 +770,7 @@ async def finish_shift(employee: dict = Depends(current_employee)):
         con.execute("UPDATE shifts SET status='closed',ended_at=? WHERE id=? AND employee_id=?",(end,shift["id"],tid))
         con.commit()
         row=con.execute("SELECT * FROM shifts WHERE id=?",(shift["id"],)).fetchone()
+    await notify_approved_staff(f"🔴 Смена завершена\n{employee_label(employee)} завершил(а) смену.", exclude={tid})
     return {"shift":dict(row)}
 
 @app.get("/api/shifts/history")
@@ -540,10 +778,36 @@ async def shifts_history(limit: int = 30, employee: dict = Depends(current_emplo
     limit=max(1,min(limit,100))
     with db_connect() as con:
         if employee["role"] in ("manager","admin"):
-            rows=con.execute("SELECT s.*,e.first_name,e.last_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id ORDER BY s.id DESC LIMIT ?",(limit,)).fetchall()
+            rows=con.execute("SELECT s.*,e.first_name,e.last_name,e.display_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id ORDER BY s.id DESC LIMIT ?",(limit,)).fetchall()
         else:
-            rows=con.execute("SELECT s.*,e.first_name,e.last_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id WHERE s.employee_id=? ORDER BY s.id DESC LIMIT ?",(employee["telegram_id"],limit)).fetchall()
+            rows=con.execute("SELECT s.*,e.first_name,e.last_name,e.display_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id WHERE s.employee_id=? ORDER BY s.id DESC LIMIT ?",(employee["telegram_id"],limit)).fetchall()
     return {"shifts":[dict(r) for r in rows]}
+
+class StaffUpdateBody(BaseModel):
+    role: str = "waiter"
+    status: str = "approved"
+
+@app.get("/api/staff")
+async def list_staff(employee: dict = Depends(current_employee)):
+    if employee["role"] not in ("admin", "manager"): raise HTTPException(403, "manager_required")
+    with db_connect() as con:
+        rows=con.execute("SELECT telegram_id,username,first_name,last_name,display_name,role,status,created_at,approved_at FROM employees ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END, display_name, first_name").fetchall()
+    return {"staff":[dict(r) for r in rows]}
+
+@app.patch("/api/staff/{telegram_id}")
+async def update_staff(telegram_id: int, body: StaffUpdateBody, employee: dict = Depends(current_employee)):
+    if employee["role"] not in ("admin", "manager"): raise HTTPException(403, "manager_required")
+    if body.role not in ("admin", "manager", "waiter", "trainee"): raise HTTPException(422, "invalid_role")
+    if body.status not in ("approved", "rejected", "pending"): raise HTTPException(422, "invalid_status")
+    if telegram_id == employee["telegram_id"] and body.status != "approved": raise HTTPException(400, "cannot_disable_self")
+    with db_connect() as con:
+        cur=con.execute("UPDATE employees SET role=?,status=?,approved_at=CASE WHEN ?='approved' THEN COALESCE(approved_at,?) ELSE approved_at END,approved_by=? WHERE telegram_id=?",(body.role,body.status,body.status,now_iso(),employee["telegram_id"],telegram_id)); con.commit()
+    if not cur.rowcount: raise HTTPException(404,"staff_not_found")
+    try:
+        if bot_app and body.status=='approved': await bot_app.bot.send_message(telegram_id,f"Доступ подтверждён. Твоя роль: {role_label(body.role)}. Напиши /start.")
+        elif bot_app and body.status=='rejected': await bot_app.bot.send_message(telegram_id,"Доступ к помощнику отключён. Если это ошибка, обратись к управляющему.")
+    except Exception: pass
+    return {"ok":True}
 
 class CreateOrderBody(BaseModel):
     table_number: str = Field(min_length=1,max_length=30)

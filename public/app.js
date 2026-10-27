@@ -3,7 +3,7 @@
   if (tg) { tg.ready(); tg.expand(); }
 
   const state = {
-    me: null, page: 'home', items: [], orders: [], activeOrder: null,
+    me: null, page: 'home', items: [], orders: [], activeOrder: null, staff: [],
     stops: [], audit: [], categories: {}, query: '', section: 'Все', stopOnly: false,
     modalItem: null, modal: null, busy: false
   };
@@ -12,7 +12,7 @@
   let toastTimer;
 
   const esc = (s='') => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const roleName = r => ({waiter:'Официант',manager:'Менеджер',admin:'Администратор'}[r] || r || 'Сотрудник');
+  const roleName = r => ({waiter:'Официант',trainee:'Стажёр',manager:'Управляющий',admin:'Администратор'}[r] || r || 'Сотрудник');
   const timeText = d => {
     if (!d) return '—';
     const x = new Date(d); return Number.isNaN(x.getTime()) ? d : x.toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
@@ -42,6 +42,7 @@
   function roleHint(err) {
     if (err?.message === 'no_active_shift') return 'Сначала начни смену.';
     if (err?.message === 'item_is_stopped') return 'Это блюдо сейчас в стоп-листе.';
+    if (err?.message === 'manager_required') return 'Только управляющий или администратор может управлять сотрудниками.';
     if (err?.message === 'approval_pending') return 'Доступ ещё не подтверждён менеджером.';
     if (err?.message === 'telegram_auth_required') return 'Открой приложение через кнопку в Telegram.';
     if (err?.message === 'order_forbidden') return 'Нет доступа к этому заказу.';
@@ -50,7 +51,7 @@
     return err?.message || 'Не удалось выполнить действие.';
   }
   function topbar() {
-    const initials = `${state.me?.first_name?.[0]||''}${state.me?.last_name?.[0]||''}`.toUpperCase() || '✦';
+    const initials = `${(state.me?.display_name||state.me?.first_name||'')[0]||''}${state.me?.last_name?.[0]||''}`.toUpperCase() || '✦';
     return `<header class="topbar"><div class="brand"><div class="brand-mark">✦</div><span>Помощник официанта</span></div><button class="avatar" data-action="profile" aria-label="Профиль">${esc(initials)}</button></header>`;
   }
   function shell(content) {
@@ -119,7 +120,7 @@
     const active=state.me.active_shift;
     return `
       <section class="hero">
-        <div class="hero-row"><div><div class="eyebrow">Рабочая панель · Большая Покровская, 49</div><h1>Доброй смены,<br>${esc(state.me.first_name||'коллега')}!</h1><p>Меню, наличие блюд и черновики заказов — в одном месте.</p></div><div style="font-size:46px;opacity:.8">✦</div></div>
+        <div class="hero-row"><div><div class="eyebrow">Рабочая панель · Большая Покровская, 49</div><h1>Доброй смены,<br>${esc(state.me.display_name||state.me.first_name||'коллега')}!</h1><p>Меню, наличие блюд и черновики заказов — в одном месте.</p></div><div style="font-size:46px;opacity:.8">✦</div></div>
         <div class="shift-status"><span class="dot" style="background:${active?'#299b5f':'#b68a36'}"></span>${active?`Смена активна · ${since(active.started_at)}`:'Смена ещё не началась'}</div>
       </section>
       <section class="stats"><div class="stat"><strong>${state.stops.length}</strong><span>Позиций в стоп-листе</span></div><div class="stat"><strong>${state.items.length}</strong><span>Позиций в каталоге</span></div><div class="stat"><strong>${state.orders.filter(o=>o.status==='draft').length}</strong><span>Черновиков заказов</span></div></section>
@@ -156,7 +157,7 @@
     return `<div class="${cls} thumb-placeholder">${item.section==='Бар'?'☕':item.section==='Детское меню'?'☺':'✦'}</div>`;
   }
   function menuCard(item) {
-    return `<article class="card menu-card" data-item="${item.id}">${imageMarkup(item)}<div class="menu-card-main"><div class="row-between" style="align-items:flex-start"><div style="min-width:0"><h3 class="item-title">${esc(item.name)}</h3><div class="item-category">${esc(item.category)}</div></div>${item.stock_status==='stop'?'<span class="badge badge-stop">В стопе</span>':''}</div><div class="item-description">${esc(item.description||item.composition||item.extra_info||'Открой карточку для подробностей.')}</div><div class="card-actions"><button class="btn btn-ghost btn-small" data-action="details" data-id="${item.id}">Подробнее</button>${item.stock_status==='stop'?`<button class="btn btn-secondary btn-small" data-action="restore" data-id="${item.id}">Вернуть</button>`:`<button class="btn btn-danger btn-small" data-action="stop" data-id="${item.id}">В стоп</button><button class="btn btn-primary btn-small" data-action="add-order" data-id="${item.id}">+ В заказ</button>`}</div></div></article>`;
+    return `<article class="card menu-card" data-item="${item.id}">${imageMarkup(item)}<div class="menu-card-main"><div class="row-between" style="align-items:flex-start"><div style="min-width:0"><h3 class="item-title">${esc(item.name)}</h3><div class="item-category">${esc(item.category)}</div></div>${item.stock_status==='stop'?'<span class="badge badge-stop">В стопе</span>':''}</div><div class="item-description">${esc(item.description||item.composition||item.extra_info||'Открой карточку для подробностей.')}</div>${item.price!=null?`<div class="item-price">${Number(item.price).toLocaleString('ru-RU')} ₽</div>`:''}<div class="card-actions"><button class="btn btn-ghost btn-small" data-action="details" data-id="${item.id}">Подробнее</button>${item.stock_status==='stop'?`<button class="btn btn-secondary btn-small" data-action="restore" data-id="${item.id}">Вернуть</button>`:`<button class="btn btn-danger btn-small" data-action="stop" data-id="${item.id}">В стоп</button><button class="btn btn-primary btn-small" data-action="add-order" data-id="${item.id}">+ В заказ</button>`}</div></div></article>`;
   }
   function renderStops() {
     return `<div class="eyebrow">Актуальное наличие</div><h1 class="page-title">Стоп-лист</h1><p class="subtitle">Недоступные позиции и история изменений.</p>
@@ -168,7 +169,7 @@
   function renderOrders() {
     if (state.activeOrder) return renderOrderDetail(state.activeOrder);
     return `<div class="eyebrow">Внутренний блокнот</div><div class="row-between"><div><h1 class="page-title">Заказы</h1><p class="subtitle">Черновики по столам — не отправляются на кухню.</p></div><button class="btn btn-primary" data-action="new-order">+ Заказ</button></div>
-      <div class="notice" style="margin:16px 0">В исходных учебных файлах нет полного прайс-листа, поэтому сумма заказа пока не рассчитывается.</div>
+      <div class="notice" style="margin:16px 0">Цены внесены по актуальному списку; если у позиции нет подтверждённой цены, она не включается в итог.</div>
       ${state.orders.length?`<div class="menu-list">${state.orders.map(o=>`<button class="card card-pad" data-action="open-order" data-id="${o.id}" style="text-align:left;color:var(--text);width:100%"><div class="row-between"><div class="stack"><strong>Стол ${esc(o.table_number)}</strong><span class="muted small">${o.items_count||0} ${plural(o.items_count||0,'позиция','позиции','позиций')} · ${timeText(o.updated_at)}</span></div><span class="badge ${o.status==='saved'?'badge-ok':'badge-amber'}">${o.status==='saved'?'Сохранён':'Черновик'}</span></div></button>`).join('')}</div>`:empty('Заказов пока нет','Создай черновик, выбери стол и добавь блюда.','▣')}`;
   }
   function renderOrderDetail(order) {
@@ -176,16 +177,16 @@
     return `<button class="btn btn-ghost btn-small" data-action="back-orders">← Все заказы</button><div class="row-between" style="margin-top:16px"><div><div class="eyebrow">Черновик официанта</div><h1 class="page-title">Стол ${esc(order.table_number)}</h1></div><span class="badge ${order.status==='saved'?'badge-ok':'badge-amber'}">${order.status==='saved'?'Сохранён':'Черновик'}</span></div>
       ${lines.length?`<div class="card" style="margin-top:16px">${lines.map(line=>`<div class="order-line"><div class="stack" style="flex:1"><strong>${esc(line.item_name)}</strong><span class="muted small">${esc(line.category||'')}</span>${line.note?`<span class="small">Комментарий: ${esc(line.note)}</span>`:''}<div class="row" style="margin-top:8px"><div class="qty-control"><button data-action="qty-minus" data-line="${line.id}" aria-label="Уменьшить">−</button><span>${line.quantity}</span><button data-action="qty-plus" data-line="${line.id}" aria-label="Увеличить">+</button></div><button class="btn btn-ghost btn-small" data-action="line-note" data-line="${line.id}">Комментарий</button></div></div><button class="icon-btn" data-action="delete-line" data-line="${line.id}" aria-label="Удалить позицию">×</button></div>`).join('')}</div>`:empty('В заказе пока пусто','Добавь позиции из меню.','＋')}
       <button class="btn btn-secondary btn-full" style="margin-top:13px" data-action="add-more">＋ Добавить блюда из меню</button>
-      <div class="order-summary row-between"><div class="stack"><strong>${lines.reduce((n,l)=>n+l.quantity,0)} ${plural(lines.reduce((n,l)=>n+l.quantity,0),'позиция','позиции','позиций')}</strong><span class="small">Сумма не рассчитана: цены не указаны</span></div><span style="font-size:20px">▣</span></div>
+      <div class="order-summary row-between"><div class="stack"><strong>${lines.reduce((n,l)=>n+l.quantity,0)} ${plural(lines.reduce((n,l)=>n+l.quantity,0),'позиция','позиции','позиций')}</strong><span class="small">${order.total==null?'Есть позиции без цены':Number(order.total).toLocaleString('ru-RU')+' ₽'}</span></div><span style="font-size:20px">▣</span></div>
       <div class="field"><label for="order-comment">Комментарий к заказу</label><textarea id="order-comment" placeholder="Например: подать позже, без лука…">${esc(order.comment||'')}</textarea></div>
       <button class="btn btn-primary btn-full" data-action="save-order">✓ Сохранить черновик</button><button class="btn btn-ghost btn-full" style="margin-top:9px" data-action="delete-order">Удалить заказ</button>
       <p class="muted small" style="text-align:center;margin-top:12px">Сохранение не отправляет заказ в кассу или на кухню.</p>`;
   }
   function renderProfile() {
     const active=state.me.active_shift;
-    return `<div class="eyebrow">Учётная запись</div><h1 class="page-title">Профиль</h1><div class="card card-pad" style="margin-top:16px"><div class="row"><div class="avatar" style="width:52px;height:52px;font-size:19px">${esc((state.me.first_name||'')[0]||'✦')}</div><div class="stack" style="flex:1"><strong>${esc([state.me.first_name,state.me.last_name].filter(Boolean).join(' ')||'Сотрудник')}</strong><span class="muted small">${esc(roleName(state.me.role))}</span><span class="muted small">Telegram ID: ${state.me.telegram_id}</span></div></div></div>
+    return `<div class="eyebrow">Учётная запись</div><h1 class="page-title">Профиль</h1><div class="card card-pad" style="margin-top:16px"><div class="row"><div class="avatar" style="width:52px;height:52px;font-size:19px">${esc((state.me.first_name||'')[0]||'✦')}</div><div class="stack" style="flex:1"><strong>${esc(state.me.display_name||[state.me.first_name,state.me.last_name].filter(Boolean).join(' ')||'Сотрудник')}</strong><span class="muted small">${esc(roleName(state.me.role))}</span><span class="muted small">Telegram ID: ${state.me.telegram_id}</span></div></div></div>
       <div class="section-heading"><h2>Моя смена</h2></div><div class="card card-pad"><div class="row"><div class="shift-icon">${active?'✓':'◷'}</div><div class="stack" style="flex:1"><strong>${active?'Смена активна':'Сейчас нет активной смены'}</strong><span class="muted small">${active?`Начата ${timeText(active.started_at)}`:'Начинай смену перед изменением наличия и созданием заказов.'}</span></div></div><button class="btn ${active?'btn-danger':'btn-primary'} btn-full" data-action="${active?'finish-shift':'start-shift'}" style="margin-top:14px">${active?'Завершить смену':'Начать смену'}</button></div>
-      ${state.me.role==='manager'||state.me.role==='admin'?`<div class="section-heading"><h2>Менеджерские команды</h2></div><div class="card card-pad"><p class="muted small">Для выдачи доступа сотрудникам открой чат с ботом и используй команды:</p><code>/pending</code><br><code>/approve TELEGRAM_ID waiter</code><br><code>/employees</code><p class="muted small" style="margin-bottom:0">Роли: waiter, manager, admin.</p></div>`:''}
+      ${state.me.role==='manager'||state.me.role==='admin'?`<div class="section-heading"><h2>Управление командой</h2></div><div id="staff-management" class="card card-pad"><div class="loading">Загружаем сотрудников…</div></div>`:''}
       <div class="section-heading"><h2>История смен</h2></div><div id="shift-history" class="card card-pad"><div class="loading">Загружаем…</div></div>
       <div class="section-heading"><h2>О приложении</h2></div><div class="card card-pad"><div class="stack"><strong>Помощник официанта</strong><span class="muted small">Первая версия · Telegram Mini App</span><span class="muted small">Ресторан: Нижний Новгород, Большая Покровская, 49</span></div></div>`;
   }
@@ -201,7 +202,7 @@
   function hideModal() { app.querySelector('.overlay')?.remove(); state.modal=null; }
   function showItemDetails(item) {
     if(!item) return;
-    const price=item.price==null?'Цена не указана в исходном учебном каталоге':`${Number(item.price).toLocaleString('ru-RU')} ₽`;
+    const price=item.price==null?'Цена не указана':`${Number(item.price).toLocaleString('ru-RU')} ₽`;
     showModal(`<div class="modal-top"><div><div class="eyebrow">${esc(item.section)}</div><h2 class="page-title" style="font-size:23px;margin-top:6px">${esc(item.name)}</h2><div class="item-category">${esc(item.category)}</div></div><button class="icon-btn" data-action="close-modal">×</button></div>
       ${item.image?`<img class="detail-image" src="${esc(item.image)}" alt="${esc(item.name)}">`:''}
       ${item.description?`<section class="detail-section"><h3>Описание для гостя</h3><p>${esc(item.description)}</p></section>`:''}
@@ -243,7 +244,7 @@
     if(search) search.addEventListener('input',e=>{state.query=e.target.value;const el=app.querySelector('#menu-list');if(el){el.innerHTML=filteredItems().map(menuCard).join('')||empty('Ничего не найдено','Попробуй другое название или ингредиент.','⌕');el.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',handleAction));}});
     app.querySelector('#clear-search')?.addEventListener('click',()=>{state.query='';render();});
     app.querySelectorAll('[data-item]').forEach(el=>el.addEventListener('click',e=>{if(e.target.closest('button'))return;const item=state.items.find(i=>i.id===el.dataset.item)||state.stops.find(i=>i.id===el.dataset.item);showItemDetails(item);}));
-    if(state.page==='profile') loadShiftHistory();
+    if(state.page==='profile') { loadShiftHistory(); if(['manager','admin'].includes(state.me.role)) loadStaff(); }
   }
   async function handleAction(e) {
     const b=e.currentTarget || e.target.closest('[data-action]');
@@ -267,6 +268,8 @@
     if(action==='qty-minus'||action==='qty-plus'){await changeQty(Number(b.dataset.line), action==='qty-plus'?1:-1);return;}
     if(action==='delete-line'){await deleteLine(Number(b.dataset.line));return;}
     if(action==='line-note'){await editLineNote(Number(b.dataset.line));return;}
+    if(action==='staff-role'){await changeStaff(Number(b.dataset.id),b.dataset.role,'approved');return;}
+    if(action==='staff-reject'){await changeStaff(Number(b.dataset.id),'waiter','rejected');return;}
   }
   async function doShift(which) {
     try {
@@ -336,16 +339,32 @@
     try {
       const r=await api('/api/audit?limit=60'); state.audit=r.events||[];
       const node=app.querySelector('#audit-panel'); if(!node)return;
-      node.innerHTML=`<div class="section-heading"><h2>История изменений</h2><small>${state.audit.length} событий</small></div><div class="card card-pad">${state.audit.length?state.audit.map(a=>`<div class="history-row"><div class="stack"><strong>${a.action==='stop'?'Добавлено в стоп':'Возвращено в меню'} · ${esc(a.item_name)}</strong><span class="muted small">${esc([a.first_name,a.last_name].filter(Boolean).join(' ')||('ID '+a.employee_id))}${a.reason?' · '+esc(a.reason):''}</span></div><span class="muted small">${timeText(a.created_at)}</span></div>`).join(''):'<span class="muted small">Изменений пока нет.</span>'}</div>`;
+      node.innerHTML=`<div class="section-heading"><h2>История изменений</h2><small>${state.audit.length} событий</small></div><div class="card card-pad">${state.audit.length?state.audit.map(a=>`<div class="history-row"><div class="stack"><strong>${a.action==='stop'?'Добавлено в стоп':'Возвращено в меню'} · ${esc(a.item_name)}</strong><span class="muted small">${esc(a.display_name||[a.first_name,a.last_name].filter(Boolean).join(' ')||('ID '+a.employee_id))}${a.reason?' · '+esc(a.reason):''}</span></div><span class="muted small">${timeText(a.created_at)}</span></div>`).join(''):'<span class="muted small">Изменений пока нет.</span>'}</div>`;
       node.scrollIntoView({behavior:'smooth',block:'start'});
     } catch(err){showToast(roleHint(err));}
   }
   async function loadShiftHistory() {
     try {
       const r=await api('/api/shifts/history?limit=30'); const node=app.querySelector('#shift-history'); if(!node)return;
-      node.innerHTML=r.shifts?.length?r.shifts.map(s=>`<div class="history-row"><div class="stack"><strong>${s.status==='active'?'Смена активна':'Смена завершена'}</strong><span class="muted small">${timeText(s.started_at)}${s.ended_at?' — '+timeText(s.ended_at):''}</span></div><span class="badge ${s.status==='active'?'badge-ok':'badge-amber'}">${s.status==='active'?'Активна':'Закрыта'}</span></div>`).join(''):'<span class="muted small">Истории пока нет.</span>';
+      node.innerHTML=r.shifts?.length?r.shifts.map(s=>`<div class="history-row"><div class="stack"><strong>${esc(s.display_name||[s.first_name,s.last_name].filter(Boolean).join(' ')||'Сотрудник')} · ${s.status==='active'?'Смена активна':'Смена завершена'}</strong><span class="muted small">${timeText(s.started_at)}${s.ended_at?' — '+timeText(s.ended_at):''}</span></div><span class="badge ${s.status==='active'?'badge-ok':'badge-amber'}">${s.status==='active'?'Активна':'Закрыта'}</span></div>`).join(''):'<span class="muted small">Истории пока нет.</span>';
     } catch(err){const node=app.querySelector('#shift-history');if(node)node.innerHTML=`<span class="muted small">${esc(roleHint(err))}</span>`;}
   }
+  async function loadStaff() {
+    const node=app.querySelector('#staff-management'); if(!node)return;
+    try {
+      const r=await api('/api/staff'); state.staff=r.staff||[];
+      const pending=state.staff.filter(x=>x.status==='pending');
+      const approved=state.staff.filter(x=>x.status==='approved');
+      const roleButtons=(s)=>`<div class="row" style="flex-wrap:wrap;margin-top:8px">${[['waiter','Официант'],['trainee','Стажёр'],['manager','Управляющий'],['admin','Администратор']].map(([role,label])=>`<button class="btn ${s.role===role?'btn-primary':'btn-ghost'} btn-small" data-action="staff-role" data-id="${s.telegram_id}" data-role="${role}">${label}</button>`).join('')}</div>`;
+      node.innerHTML=`<div class="stack"><strong>Заявки на доступ · ${pending.length}</strong>${pending.length?pending.map(s=>`<div class="staff-row"><div class="row-between"><div class="stack"><strong>${esc(s.display_name||[s.first_name,s.last_name].filter(Boolean).join(' ')||'Без имени')}</strong><span class="muted small">ID ${s.telegram_id} · @${esc(s.username||'нет username')}</span></div><span class="badge badge-amber">Ожидает</span></div>${roleButtons(s)}<button class="btn btn-danger btn-small" data-action="staff-reject" data-id="${s.telegram_id}" style="margin-top:6px">Отклонить заявку</button></div>`).join(''):'<span class="muted small">Новых заявок нет.</span>'}<div class="divider" style="margin:12px 0"></div><strong>Сотрудники · ${approved.length}</strong>${approved.map(s=>`<div class="staff-row"><div class="row-between"><div class="stack"><strong>${esc(s.display_name||[s.first_name,s.last_name].filter(Boolean).join(' ')||'Без имени')}</strong><span class="muted small">${esc(roleName(s.role))} · ID ${s.telegram_id}</span></div><span class="badge badge-ok">Активен</span></div>${roleButtons(s)}<button class="btn btn-danger btn-small" data-action="staff-reject" data-id="${s.telegram_id}" style="margin-top:6px">Отключить доступ</button></div>`).join('')}</div>`;
+      node.querySelectorAll('[data-action="staff-role"],[data-action="staff-reject"]').forEach(b=>b.addEventListener('click',handleAction));
+    } catch(err) { node.innerHTML=`<span class="muted small">${esc(roleHint(err))}</span>`; }
+  }
+  async function changeStaff(id,role,status) {
+    try { await api(`/api/staff/${id}`,{method:'PATCH',body:JSON.stringify({role,status})}); showToast(status==='approved'?'Данные сотрудника обновлены':'Доступ отключён'); await loadStaff(); }
+    catch(err) { showToast(roleHint(err)); }
+  }
+
   document.addEventListener('visibilitychange', () => { if (!document.hidden) syncAvailability(); });
   setInterval(syncAvailability, 15000);
   boot();

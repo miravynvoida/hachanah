@@ -147,3 +147,5 @@ button:disabled { opacity: .5; cursor: default; }
   .tile-blue { background:linear-gradient(145deg,#2b3541,#28313a); color:#bed5eb; }
   .notice { background:#3d3524; color:#e8cf91; }
 }
+.staff-row{padding:12px 0;border-bottom:1px solid var(--line)}.staff-row:last-child{border-bottom:0}.divider{height:1px;background:var(--line)}
+.item-price{font-weight:750;color:var(--accent);margin:7px 0 2px;font-size:15px}
