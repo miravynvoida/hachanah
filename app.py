@@ -212,18 +212,26 @@ def get_admin_ids() -> set[int]:
 
 
 def add_or_update_employee(tg_user: dict) -> dict:
+    """Create/update a Telegram employee profile without assuming optional fields exist.
+
+    Telegram users are not required to set a last name or username. SQLite columns
+    with NOT NULL constraints must receive strings rather than None.
+    """
     tid = int(tg_user["id"])
+    username = str(tg_user.get("username") or "").strip()
+    first_name = str(tg_user.get("first_name") or "").strip()
+    last_name = str(tg_user.get("last_name") or "").strip()
     is_admin = is_admin_id(tid)
     with db_connect() as con:
         existing = con.execute("SELECT * FROM employees WHERE telegram_id=?", (tid,)).fetchone()
         if existing is None:
             con.execute("""INSERT INTO employees (telegram_id,username,first_name,last_name,role,status,created_at,approved_at)
                          VALUES (?,?,?,?,?,?,?,?)""",
-                        (tid, tg_user.get("username", ""), tg_user.get("first_name", ""), tg_user.get("last_name", ""),
+                        (tid, username, first_name, last_name,
                          "admin" if is_admin else "waiter", "approved" if is_admin else "pending", now_iso(), now_iso() if is_admin else None))
         else:
             con.execute("UPDATE employees SET username=?, first_name=?, last_name=? WHERE telegram_id=?",
-                        (tg_user.get("username", ""), tg_user.get("first_name", ""), tg_user.get("last_name", ""), tid))
+                        (username, first_name, last_name, tid))
             if is_admin:
                 con.execute("UPDATE employees SET role='admin',status='approved',approved_at=COALESCE(approved_at,?) WHERE telegram_id=?", (now_iso(), tid))
         con.commit()
