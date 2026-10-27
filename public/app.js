@@ -214,26 +214,32 @@
       <div class="row" style="margin-top:14px">${item.stock_status==='stop'?`<button class="btn btn-primary" style="flex:1" data-action="restore" data-id="${item.id}">Вернуть в меню</button>`:`<button class="btn btn-danger" style="flex:1" data-action="stop" data-id="${item.id}">В стоп-лист</button><button class="btn btn-primary" style="flex:1" data-action="add-order" data-id="${item.id}">＋ В заказ</button>`}</div>`);
   }
   function showCreateOrderModal(pendingItemId=null) {
-    showModal(`<div class="modal-top"><div><div class="eyebrow">Новая запись</div><h2 class="page-title" style="font-size:23px">Новый заказ</h2><p class="subtitle">Заказ останется внутренним черновиком.</p></div><button class="icon-btn" data-action="close-modal">×</button></div>
-      <form id="new-order-form"><div class="field"><label for="table-number">Номер стола</label><input id="table-number" name="table_number" placeholder="Например, 12" maxlength="30" required autocomplete="off"></div><button class="btn btn-primary btn-full" type="submit">Создать заказ</button></form>
-      <input type="hidden" id="pending-item-id" value="${esc(pendingItemId||'')}">`);
-    setTimeout(()=>document.getElementById('table-number')?.focus(),80);
+    const lunchItems=state.items.filter(x=>(x.section||'').toLowerCase().includes('ланч'));
+    const opts=(items,label)=>`<option value="">${label}</option><option value="skip">Пропустить</option>`+[...new Map(items.map(x=>[x.id,x])).values()].map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
+    const forKind=(week,kind)=>lunchItems.filter(x=>{const c=(x.category||'').toLowerCase();const wm=c.includes(`неделя ${week}`)||((week==='1'||week==='3')&&c.includes('1 и 3 неделя'))||((week==='2'||week==='4')&&c.includes('2 и 4 неделя'))||c==='бизнес-ланч';const km=kind==='salad'?c.includes('салат'):kind==='soup'?c.includes('суп'):(c.includes('горяч')||c.includes('1 и 3 неделя')||c.includes('2 и 4 неделя')||c==='бизнес-ланч');return wm&&km;});
+    showModal(`<div class="modal-top"><div><div class="eyebrow">Новая запись</div><h2 class="page-title" style="font-size:23px">Новый заказ</h2><p class="subtitle">Черновик официанта — не отправляется на кухню.</p></div><button class="icon-btn" data-action="close-modal">×</button></div>
+      <form id="new-order-form"><div class="field"><label for="table-number">Номер стола</label><input id="table-number" name="table_number" placeholder="Например, 12" maxlength="30" required autocomplete="off"></div>
+      <div class="field"><label for="lunch-type">Тип заказа</label><select id="lunch-type" name="lunch_type"><option value="business">Бизнес-ланч обычный</option><option value="hit">Ланч-хит</option><option value="none">Обычный заказ (без ланча)</option></select></div>
+      <div id="lunch-fields"><div class="field"><label for="lunch-week">Неделя меню</label><select id="lunch-week" name="lunch_week"><option value="1">Первая неделя</option><option value="2">Вторая неделя</option><option value="3">Третья неделя</option><option value="4">Четвёртая неделя</option></select></div>
+      <div class="field"><label for="lunch-count">Количество блюд</label><select id="lunch-count" name="lunch_count"><option value="2">2 блюда — 350 ₽ / 490 ₽</option><option value="3">3 блюда — 380 ₽ / 520 ₽</option></select></div>
+      <div class="field"><label for="lunch-salad">Салат</label><select id="lunch-salad" name="lunch_salad"></select></div><div class="field"><label for="lunch-soup">Суп</label><select id="lunch-soup" name="lunch_soup"></select></div><div class="field"><label for="lunch-hot">Горячее</label><select id="lunch-hot" name="lunch_hot"></select></div>
+      <div class="field"><label for="lunch-drink">Напиток</label><select id="lunch-drink" name="lunch_drink"></select></div><p class="muted small" id="lunch-note">Шот эспрессо добавляется автоматически и входит в стоимость ланча.</p></div>
+      <button class="btn btn-primary btn-full" type="submit">Создать заказ</button></form><input type="hidden" id="pending-item-id" value="${esc(pendingItemId||'')}">`);
+    const ov=app.querySelector('#overlay');
+    const fill=()=>{const w=ov.querySelector('#lunch-week').value;for(const [f,k,l] of [['lunch-salad','salad','Выберите салат'],['lunch-soup','soup','Выберите суп'],['lunch-hot','hot','Выберите горячее']])ov.querySelector('#'+f).innerHTML=opts(forKind(w,k),l+' или пропустите');};
+    const drinks=()=>{const hit=ov.querySelector('#lunch-type').value==='hit';const list=hit?['Морс','Чай чёрный','Чай зелёный','Американо','Капучино','Белое сухое вино','Белое полусладкое вино','Красное сухое вино','Красное полусладкое вино']:['Морс','Чай чёрный','Чай зелёный'];ov.querySelector('#lunch-drink').innerHTML='<option value="">Напиток не выбран</option>'+list.map(x=>`<option>${x}</option>`).join('');ov.querySelector('#lunch-note').textContent=hit?'Ланч-хит: напиток на выбор. Шот эспрессо входит в стоимость.':'Обычный ланч: морс, чёрный или зелёный чай. Шот эспрессо входит в стоимость.';};
+    ov.querySelector('#lunch-week').addEventListener('change',fill);ov.querySelector('#lunch-type').addEventListener('change',()=>{const show=ov.querySelector('#lunch-type').value!=='none';ov.querySelector('#lunch-fields').hidden=!show;drinks();});fill();drinks();setTimeout(()=>document.getElementById('table-number')?.focus(),80);
   }
   function wireModal() {
     const overlay=app.querySelector('#overlay');
     overlay?.addEventListener('click',e=>{ if(e.target===overlay) hideModal(); });
     overlay?.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',handleAction));
     overlay?.querySelector('#new-order-form')?.addEventListener('submit',async e=>{
-      e.preventDefault(); const table=document.getElementById('table-number').value.trim();
-      const pending=document.getElementById('pending-item-id').value;
-      if(!table) return;
-      try {
-        const r=await api('/api/orders',{method:'POST',body:JSON.stringify({table_number:table})});
-        state.activeOrder=r.order; hideModal();
-        if(pending) await addToOrder(pending,1,'',false);
-        await go('orders');
-        showToast(`Создан заказ · стол ${table}`);
-      } catch(err) { showToast(roleHint(err)); }
+      e.preventDefault(); const table=document.getElementById('table-number').value.trim();const form=e.currentTarget;const pending=document.getElementById('pending-item-id').value;const type=form.elements.lunch_type.value;if(!table)return;
+      try{const r=await api('/api/orders',{method:'POST',body:JSON.stringify({table_number:table})});state.activeOrder=r.order;if(pending)await addToOrder(pending,1,'',false);
+        if(type!=='none'){const count=Number(form.elements.lunch_count.value);const chosen=[form.elements.lunch_salad.value,form.elements.lunch_soup.value,form.elements.lunch_hot.value].filter(x=>x&&x!=='skip');if(chosen.length!==count){showToast(`Выбери ровно ${count} блюда из разных категорий`);return;}const week=form.elements.lunch_week.value;const price=type==='hit'?(count===2?490:520):(count===2?350:380);const drink=form.elements.lunch_drink.value;const espresso=state.items.find(x=>x.name.toLowerCase()==='эспрессо 30мл')||state.items.find(x=>x.name.toLowerCase().includes('эспрессо')&&!x.name.toLowerCase().includes('тоник'));const details=`${type==='hit'?'Ланч-хит':'Бизнес-ланч'} · неделя ${week} · ${count} блюда · пакет ${price} ₽${drink?' · напиток: '+drink:''} · шот эспрессо включён`;for(const itemId of chosen)await addToOrder(itemId,1,details,false);if(espresso)await addToOrder(espresso.id,1,'Включён в ланч — не считать отдельно',false);await api(`/api/orders/${state.activeOrder.id}/save`,{method:'POST',body:JSON.stringify({comment:details})});state.activeOrder=(await api(`/api/orders/${state.activeOrder.id}`)).order;}
+        hideModal();await go('orders');showToast(`Создан заказ · стол ${table}`);
+      }catch(err){showToast(roleHint(err));}
     });
   }
   function wireContent() {

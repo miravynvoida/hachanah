@@ -283,7 +283,8 @@ def order_payload(con: sqlite3.Connection, order_id: int) -> dict | None:
     lines = con.execute("SELECT l.*, m.category, m.image, m.price, m.stock_status FROM order_lines l JOIN menu_items m ON m.id=l.item_id WHERE l.order_id=? ORDER BY l.id", (order_id,)).fetchall()
     result = dict(order)
     result["lines"] = [dict(l) for l in lines]
-    result["total"] = None if any(l["price"] is None for l in lines) else sum((l["price"] or 0) * l["quantity"] for l in lines)
+    priced_lines=[l for l in lines if not str(l.get("note", "")).startswith("Включён в ланч")]
+    result["total"] = None if any(l["price"] is None for l in priced_lines) else sum((l["price"] or 0) * l["quantity"] for l in priced_lines)
     result["items_count"] = sum(l["quantity"] for l in lines)
     return result
 
@@ -447,13 +448,22 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         page=int(action.rsplit(':',1)[1]) if action.startswith('stops:page:') else 0
         with db_connect() as con: rows=con.execute("SELECT id,name,category,stop_reason,price FROM menu_items WHERE is_active=1 AND stock_status='stop' ORDER BY section,category,name").fetchall()
         if not rows: await edit_or_send(q.message, "✅ Стоп-лист пуст — все позиции доступны.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]])); return
-        size=12; page=max(0,min(page,(len(rows)-1)//size)); kb=[[InlineKeyboardButton("🔴 "+r['name'][:50],callback_data=f"item:view:{r['id']}")] for r in rows[page*size:(page+1)*size]]
+        size=25; page=max(0,min(page,(len(rows)-1)//size))
+        chunk=rows[page*size:(page+1)*size]
+        lines=[]
+        for i,r in enumerate(chunk, start=page*size+1):
+            reason=f" — {html_escape(r['stop_reason'])}" if r['stop_reason'] else ""
+            price=f" · {int(r['price'])} ₽" if r['price'] is not None else ""
+            lines.append(f"{i}. <b>{html_escape(r['name'])}</b>{price}{reason}")
         nav=[]
-        if page>0: nav.append(InlineKeyboardButton("◀️ Назад",callback_data=f"stops:page:{page-1}"))
-        if (page+1)*size<len(rows): nav.append(InlineKeyboardButton("Далее ▶️",callback_data=f"stops:page:{page+1}"))
+        if page>0: nav.append(InlineKeyboardButton("◀️ Предыдущая",callback_data=f"stops:page:{page-1}"))
+        if (page+1)*size<len(rows): nav.append(InlineKeyboardButton("Следующая ▶️",callback_data=f"stops:page:{page+1}"))
+        kb=[]
         if nav: kb.append(nav)
         kb.append([InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")])
-        await edit_or_send(q.message, f"🚫 <b>Стоп-лист</b> · {len(rows)} позиций · страница {page+1}\nВыбери позицию:",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
+        title=f"🚫 <b>Стоп-лист</b> · {len(rows)} позиций"
+        if len(rows)>size: title+=f" · страница {page+1}/{(len(rows)-1)//size+1}"
+        await edit_or_send(q.message, title+"\n\n"+"\n".join(lines),reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
     elif action == "menu:profile":
         sh=get_active_shift(uid)
         await edit_or_send(q.message, f"👤 <b>{employee_label(employee)}</b>\nРоль: {role_label(employee['role'])}\nСтатус: {employee['status']}\nСмена: {'активна с '+sh['started_at'] if sh else 'не начата'}\nTelegram ID: {uid}",parse_mode="HTML",reply_markup=main_keyboard(employee))
