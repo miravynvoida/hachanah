@@ -242,6 +242,8 @@ def add_or_update_employee(tg_user: dict) -> dict:
                         (username, first_name, last_name, tid))
             if is_admin:
                 con.execute("UPDATE employees SET role='admin',status='approved',approved_at=COALESCE(approved_at,?) WHERE telegram_id=?", (now_iso(), tid))
+            elif existing["status"] == "rejected":
+                con.execute("UPDATE employees SET status='pending' WHERE telegram_id=?", (tid,))
         con.commit()
     return get_employee(tid) or {}
 
@@ -301,13 +303,14 @@ def employee_label(employee: dict | sqlite3.Row | None) -> str:
 
 
 def main_keyboard(employee: dict) -> InlineKeyboardMarkup:
+    active = get_active_shift(int(employee["telegram_id"])) if employee.get("telegram_id") else None
     rows = [
         [InlineKeyboardButton("🔎 Найти блюдо или напиток", callback_data="menu:search"), InlineKeyboardButton("🚫 Стоп-лист", callback_data="menu:stops")],
-        [InlineKeyboardButton("🟢 Начать смену", callback_data="shift:start"), InlineKeyboardButton("🔴 Завершить смену", callback_data="shift:finish")],
+        [InlineKeyboardButton("🔴 Закрыть смену" if active else "🟢 Начать смену", callback_data="shift:finish" if active else "shift:start")],
         [InlineKeyboardButton("👤 Мой профиль", callback_data="menu:profile"), InlineKeyboardButton("📱 Открыть Mini App", web_app=WebAppInfo(url=WEBAPP_URL))] if WEBAPP_URL else [InlineKeyboardButton("👤 Мой профиль", callback_data="menu:profile")],
     ]
     if employee.get("role") in ("admin", "manager"):
-        rows.append([InlineKeyboardButton("🛠 Управление сотрудниками", callback_data="admin:home"), InlineKeyboardButton("🕘 Смены команды", callback_data="admin:shifts")])
+        rows.append([InlineKeyboardButton("👥 Сотрудники", callback_data="admin:employees"), InlineKeyboardButton("🕘 История смен", callback_data="admin:shifts")])
     return InlineKeyboardMarkup(rows)
 
 
@@ -325,15 +328,22 @@ async def notify_approved_staff(text: str, exclude: set[int] | None = None) -> N
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.effective_user or not update.effective_message: return
     u = update.effective_user
+    previous = get_employee(u.id)
+    was_rejected = bool(previous and previous.get("status") == "rejected")
     employee = add_or_update_employee({"id":u.id,"username":u.username,"first_name":u.first_name,"last_name":u.last_name})
     if not str(employee.get("display_name") or "").strip():
         context.user_data["awaiting_display_name"] = True
         await update.effective_message.reply_text("Привет! Для регистрации напиши своё ФИО или имя, по которому тебя знают в ресторане. Например: Анна Иванова или просто Анна.")
         return
     if employee.get("status") != "approved":
-        await update.effective_message.reply_text(f"Заявка на доступ уже ожидает подтверждения.\nИмя: {employee_label(employee)}\nTelegram ID: {u.id}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить статус", callback_data="registration:status")]]))
+        if was_rejected:
+            for admin_id in get_admin_ids():
+                try:
+                    await context.bot.send_message(admin_id, f"🔁 Повторная заявка на доступ\nСотрудник: {employee_label(employee)}\nTelegram ID: {u.id}\nUsername: @{employee.get('username') or 'нет'}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("✅ Официант", callback_data=f"staff:approve:{u.id}:waiter"), InlineKeyboardButton("🧑‍🍳 Стажёр", callback_data=f"staff:approve:{u.id}:trainee")],[InlineKeyboardButton("🧑‍💼 Управляющий", callback_data=f"staff:approve:{u.id}:manager"), InlineKeyboardButton("🛡 Администратор", callback_data=f"staff:approve:{u.id}:admin")],[InlineKeyboardButton("❌ Отклонить", callback_data=f"staff:reject:{u.id}")]]))
+                except Exception: log.exception("Could not notify admin about reapplication")
+        await update.effective_message.reply_text(f"Заявка на доступ {'отправлена повторно' if was_rejected else 'уже ожидает подтверждения'}.\nИмя: {employee_label(employee)}\nTelegram ID: {u.id}", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔄 Проверить статус", callback_data="registration:status")]]))
         return
-    await update.effective_message.reply_text(f"Привет, {employee_label(employee)}!\n\nПомощник официанта готов. Ищи позиции прямо сообщением, управляй стоп-листом и сменой кнопками ниже.", reply_markup=main_keyboard(employee))
+    await update.effective_message.reply_text(f"Привет, {employee_label(employee)}!\n\n🍽 Помощник команды ресторана\nИщи блюда и напитки, проверяй стоп-лист и управляй сменой.\n\nВыбери действие:", reply_markup=main_keyboard(employee))
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -364,16 +374,20 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     employee = get_employee(uid)
     if not employee or employee.get("status") != "approved":
         await update.effective_message.reply_text("Сначала отправь /start и дождись подтверждения доступа."); return
+    if context.user_data.pop("awaiting_menu_search", False):
+        try: await update.effective_message.delete()
+        except Exception: pass
     await search_menu_in_chat(update, context, text)
 
 
 async def search_menu_in_chat(update: Update, context: ContextTypes.DEFAULT_TYPE, query: str) -> None:
     with db_connect() as con:
-        rows = con.execute("SELECT id,name,category,section,stock_status,price FROM menu_items WHERE is_active=1 AND (name LIKE ? OR category LIKE ? OR composition LIKE ? OR description LIKE ? OR extra_info LIKE ?) ORDER BY CASE WHEN lower(name)=lower(?) THEN 0 WHEN lower(name) LIKE lower(?) THEN 1 ELSE 2 END, name LIMIT 12", (f"%{query}%",)*5 + (query, f"{query}%")).fetchall()
+        rows = con.execute("SELECT id,name,category,section,stock_status,price FROM menu_items WHERE is_active=1 AND (name LIKE ? OR category LIKE ? OR composition LIKE ? OR description LIKE ? OR extra_info LIKE ?) ORDER BY CASE WHEN lower(name)=lower(?) THEN 0 WHEN lower(name) LIKE lower(?) THEN 1 ELSE 2 END, name LIMIT 40", (f"%{query}%",)*5 + (query, f"{query}%")).fetchall()
     if not rows:
-        await update.effective_message.reply_text(f"По запросу «{query}» ничего не нашёл. Попробуй часть названия или ингредиент.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("📋 Открыть меню", callback_data="menu:search")]])); return
+        await update.effective_message.reply_text(f"По запросу «{query}» ничего не нашёл. Попробуй часть названия или ингредиент.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("🔎 Новый поиск", callback_data="menu:search")],[InlineKeyboardButton("🏠 Главное меню", callback_data="menu:home")]])); return
     kb = [[InlineKeyboardButton(("🔴 " if r["stock_status"] == "stop" else "🟢 ") + r["name"][:55] + (f" · {int(r['price'])} ₽" if r["price"] is not None else ""), callback_data=f"item:view:{r['id']}")] for r in rows]
     kb.append([InlineKeyboardButton("🚫 Открыть стоп-лист", callback_data="menu:stops")])
+    kb.append([InlineKeyboardButton("🏠 Главное меню", callback_data="menu:home")])
     await update.effective_message.reply_text(f"🔎 Нашёл по запросу «{query}» — выбери позицию:", reply_markup=InlineKeyboardMarkup(kb))
 
 
@@ -396,7 +410,9 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         with db_connect() as con: rows=con.execute("SELECT id,name,category,stop_reason,price FROM menu_items WHERE is_active=1 AND stock_status='stop' ORDER BY section,category,name").fetchall()
         if not rows: await q.message.reply_text("✅ Стоп-лист пуст — все позиции доступны.", reply_markup=main_keyboard(employee)); return
         kb=[[InlineKeyboardButton("🔴 "+r['name'][:55],callback_data=f"item:view:{r['id']}")] for r in rows]
-        await q.message.reply_text("🚫 <b>Стоп-лист</b>\nВыбери позицию, чтобы посмотреть детали или вернуть её.",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
+        kb.append([InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")])
+        try: await q.edit_message_text("🚫 <b>Стоп-лист</b>\nВыбери позицию, чтобы посмотреть детали или вернуть её.",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
+        except Exception: await q.message.reply_text("🚫 <b>Стоп-лист</b>\nВыбери позицию, чтобы посмотреть детали или вернуть её.",reply_markup=InlineKeyboardMarkup(kb),parse_mode="HTML")
     elif action == "menu:profile":
         sh=get_active_shift(uid)
         await q.message.reply_text(f"👤 <b>{employee_label(employee)}</b>\nРоль: {role_label(employee['role'])}\nСтатус: {employee['status']}\nСмена: {'активна с '+sh['started_at'] if sh else 'не начата'}\nTelegram ID: {uid}",parse_mode="HTML",reply_markup=main_keyboard(employee))
@@ -438,7 +454,8 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if changed: await notify_approved_staff(("🚫 Добавлено в стоп-лист" if verb=='stop' else "✅ Возвращено в меню")+f"\nПозиция: {item['name']}\nСотрудник: {employee_label(employee)}",exclude={uid})
         await q.message.reply_text(("Позиция добавлена в стоп-лист." if verb=='stop' else "Позиция возвращена в меню."),reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Открыть позицию",callback_data=f"item:view:{item_id}")],[InlineKeyboardButton("Главное меню",callback_data="menu:home")]]))
     elif action == "menu:home":
-        await q.message.reply_text("Главное меню помощника:",reply_markup=main_keyboard(employee))
+        try: await q.edit_message_text(f"🍽 <b>Помощник команды ресторана</b>\nПривет, {employee_label(employee)}!\nВыбери действие:",parse_mode="HTML",reply_markup=main_keyboard(employee))
+        except Exception: await q.message.reply_text(f"🍽 Помощник команды ресторана\nПривет, {employee_label(employee)}!",reply_markup=main_keyboard(employee))
     elif action == "admin:home":
         if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
         await q.message.reply_text("🛠 <b>Управление сотрудниками</b>",parse_mode="HTML",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⏳ Заявки",callback_data="admin:pending"),InlineKeyboardButton("👥 Сотрудники",callback_data="admin:employees")],[InlineKeyboardButton("🕘 Все смены",callback_data="admin:shifts")],[InlineKeyboardButton("⬅️ Главное меню",callback_data="menu:home")]]))
@@ -446,14 +463,26 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
         status='pending' if action.endswith('pending') else 'approved'
         with db_connect() as con: rows=con.execute("SELECT * FROM employees WHERE status=? ORDER BY display_name,first_name",(status,)).fetchall()
-        if not rows: await q.message.reply_text("Список пуст.",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("Назад",callback_data="admin:home")]])); return
-        for r in rows[:25]:
-            if status=='pending':
-                kb=[[InlineKeyboardButton("Официант",callback_data=f"staff:approve:{r['telegram_id']}:waiter"),InlineKeyboardButton("Стажёр",callback_data=f"staff:approve:{r['telegram_id']}:trainee")],[InlineKeyboardButton("Управляющий",callback_data=f"staff:approve:{r['telegram_id']}:manager"),InlineKeyboardButton("Администратор",callback_data=f"staff:approve:{r['telegram_id']}:admin")],[InlineKeyboardButton("Отклонить",callback_data=f"staff:reject:{r['telegram_id']}")]]
-                await q.message.reply_text(f"⏳ {employee_label(r)} · ID {r['telegram_id']} · @{r['username'] or 'нет'}",reply_markup=InlineKeyboardMarkup(kb))
-            else:
-                kb=[[InlineKeyboardButton("Официант",callback_data=f"staff:role:{r['telegram_id']}:waiter"),InlineKeyboardButton("Стажёр",callback_data=f"staff:role:{r['telegram_id']}:trainee")],[InlineKeyboardButton("Управляющий",callback_data=f"staff:role:{r['telegram_id']}:manager"),InlineKeyboardButton("Администратор",callback_data=f"staff:role:{r['telegram_id']}:admin")],[InlineKeyboardButton("Отключить доступ",callback_data=f"staff:reject:{r['telegram_id']}")]]
-                await q.message.reply_text(f"👤 {employee_label(r)} · {role_label(r['role'])} · ID {r['telegram_id']}",reply_markup=InlineKeyboardMarkup(kb))
+        kb=[]
+        for r in rows[:80]:
+            label=f"⏳ {employee_label(r)}" if status=='pending' else f"{employee_label(r)} · {role_label(r['role'])}"
+            kb.append([InlineKeyboardButton(label[:60],callback_data=f"staff:open:{r['telegram_id']}:{status}")])
+        kb.extend([[InlineKeyboardButton("⏳ Заявки",callback_data="admin:pending"),InlineKeyboardButton("👥 Сотрудники",callback_data="admin:employees")],[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]])
+        txt=("⏳ Заявки на доступ" if status=='pending' else "👥 Сотрудники")+f"\nВсего: {len(rows)}\nВыбери человека:"
+        try: await q.edit_message_text(txt,reply_markup=InlineKeyboardMarkup(kb))
+        except Exception: await q.message.reply_text(txt,reply_markup=InlineKeyboardMarkup(kb))
+    elif action.startswith("staff:open:"):
+        if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
+        _,_,target,status=action.split(":"); target=int(target)
+        with db_connect() as con: r=con.execute("SELECT * FROM employees WHERE telegram_id=?",(target,)).fetchone()
+        if not r: await q.answer("Сотрудник не найден",show_alert=True); return
+        if status=='pending':
+            kb=[[InlineKeyboardButton("Официант",callback_data=f"staff:approve:{target}:waiter"),InlineKeyboardButton("Стажёр",callback_data=f"staff:approve:{target}:trainee")],[InlineKeyboardButton("Управляющий",callback_data=f"staff:approve:{target}:manager"),InlineKeyboardButton("Администратор",callback_data=f"staff:approve:{target}:admin")],[InlineKeyboardButton("❌ Отклонить",callback_data=f"staff:reject:{target}")]]
+        else:
+            kb=[[InlineKeyboardButton("Официант",callback_data=f"staff:role:{target}:waiter"),InlineKeyboardButton("Стажёр",callback_data=f"staff:role:{target}:trainee")],[InlineKeyboardButton("Управляющий",callback_data=f"staff:role:{target}:manager"),InlineKeyboardButton("Администратор",callback_data=f"staff:role:{target}:admin")],[InlineKeyboardButton("🚫 Отключить доступ",callback_data=f"staff:reject:{target}")]]
+        kb.append([InlineKeyboardButton("⬅️ К списку",callback_data="admin:employees" if status=='approved' else "admin:pending"),InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")])
+        try: await q.edit_message_text(f"👤 {employee_label(r)}\nРоль: {role_label(r['role'])}\nСтатус: {r['status']}\nID: {target}\n@{r['username'] or 'нет username'}",reply_markup=InlineKeyboardMarkup(kb))
+        except Exception: await q.message.reply_text(f"👤 {employee_label(r)} · {role_label(r['role'])}",reply_markup=InlineKeyboardMarkup(kb))
     elif action == "admin:shifts":
         if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
         with db_connect() as con: rows=con.execute("SELECT s.*,e.display_name,e.first_name,e.last_name FROM shifts s JOIN employees e ON e.telegram_id=s.employee_id ORDER BY s.id DESC LIMIT 30").fetchall()
@@ -473,7 +502,7 @@ async def bot_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         if employee['role'] not in ('admin','manager'): await q.message.reply_text("Недостаточно прав."); return
         target=int(action.split(":")[-1])
         with db_connect() as con: con.execute("UPDATE employees SET status='rejected' WHERE telegram_id=?",(target,)); con.commit()
-        await q.message.reply_text(f"Доступ сотруднику {target} отключён.")
+        await q.edit_message_text(f"Доступ сотруднику {target} отключён.",reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("👥 К сотрудникам",callback_data="admin:employees")],[InlineKeyboardButton("🏠 Главное меню",callback_data="menu:home")]]))
 
 
 async def cmd_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
